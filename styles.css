@@ -51,7 +51,16 @@ body{
 .btn:disabled{background:var(--neutral-300); cursor:not-allowed}
 .btn:not(:disabled):hover{background:var(--primary-blue-hover); transform:translateY(-1px)}
 .btn-secondary{background:#fff; color:var(--neutral-900); border:1px solid var(--neutral-300)}
-.btn-secondary:hover{background:var(--neutral-100); transform:none}
+.btn.btn-secondary {
+  background-color: #fff;        /* 기본 흰색 */
+  border: 1px solid #ccc;        /* 경계선 */
+  color: #333;                   /* 글자색 (건드리지 않음) */
+  transition: background-color 0.2s ease-in-out;
+}
+
+.btn.btn-secondary:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.05); /* 흰색 → 아주 옅은 회색 */
+}
 .spinner{width:18px;height:18px;border:2px solid transparent;border-top:2px solid currentColor;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 

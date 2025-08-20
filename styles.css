@@ -169,3 +169,15 @@ code.language-diff {
     color: #d1d5db;
   }
 }
+
+/* 공지 배너 */
+.notice {
+  background: #fff3cd;   /* 연한 노랑 */
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+.hidden { display: none !important; }

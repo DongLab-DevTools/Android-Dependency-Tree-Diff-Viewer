@@ -171,3 +171,91 @@ code.language-diff { letter-spacing: 0; }
 .hidden {
   display: none !important;
 }
+
+/* ===== Guide (하단 도움말) ===== */
+.guide-section{
+  margin-top: 28px;
+  background: #fff;
+  border: 1px solid var(--neutral-200);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  padding: 24px;
+}
+
+.guide-title{
+  margin: 0 0 16px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--neutral-900);
+  letter-spacing: -0.2px;
+}
+
+.guide-steps{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 20px;
+}
+
+.guide-step{
+  border-top: 1px solid var(--neutral-200);
+  padding-top: 16px;
+}
+.guide-step:first-child{
+  border-top: 0;
+  padding-top: 0;
+}
+
+.guide-step-title{
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--neutral-900);
+  margin-bottom: 10px;
+}
+
+.guide-block{
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.guide-label{
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neutral-600);
+  letter-spacing: .2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.guide-code{
+  margin: 0;
+  border-radius: 8px;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+}
+.guide-code code{
+  display: block;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #1f2937;
+  background: #fff !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.guide-note{
+  margin: 6px 0 10px;
+  font-size: 14px;
+  color: var(--neutral-600);
+}
+
+/* 모바일 튜닝 */
+@media (max-width: 820px){
+  .guide-section{ padding: 20px; }
+  .guide-title{ font-size: 18px; }
+}

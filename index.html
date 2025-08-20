@@ -28,8 +28,7 @@
         ⚠️ 파일이 너무 크면 비교 결과가 일부만 표시되거나 느려질 수 있습니다.
       </div>
 
-      <div id="error" class="error hidden" aria-live="polite"></div>
-      
+      <div id="error" class="error"></div>
       <div class="grid">
         <div class="field">
           <label for="file-old">기존 의존성 파일 (.txt)</label>
@@ -68,6 +67,36 @@
         <pre><code class="language-diff" id="code-diff"></code></pre>
       </div>
     </section>
+
+<section class="guide-section" id="guide-deptree">
+  <h2 class="guide-title">의존성 트리 출력하는 방법</h2>
+
+  <ol class="guide-steps">
+    <li class="guide-step">
+      <div class="guide-step-title">1. 변경 전 의존성 출력</div>
+      <div class="guide-note">현재 <strong>develop</strong> 브랜치 또는 변경 전 브랜치에서 실행해 주세요.</div>
+      <div class="guide-block">
+        <div class="guide-label">명령어</div>
+        <pre class="guide-code"><code class="">./gradlew app:dependencies --configuration {BuildVariant명} &gt; before.txt</code></pre>
+      </div>
+    </li>
+
+    <li class="guide-step">
+      <div class="guide-step-title">2. 변경 후 의존성 출력</div>
+      <div class="guide-note">브랜치를 옮긴 후 동일한 명령어로 <strong>파일명만 다르게</strong> 저장합니다.</div>
+      <div class="guide-block">
+        <div class="guide-label">명령어</div>
+        <pre class="guide-code"><code class="">./gradlew app:dependencies --configuration {BuildVariant명} &gt; after.txt</code></pre>
+      </div>
+    
+    </li>
+
+    <li class="guide-step">
+      <div class="guide-step-title">3. 비교하기</div>
+      <div class="guide-note">위에서 저장한 <code>before.txt</code>와 <code>after.txt</code>를 업로드해 보세요.</div>
+    </li>
+  </ol>
+</section>
   </main>
 
   <!-- Core (diff 로직) 먼저 로드 -->

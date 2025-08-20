@@ -21,20 +21,19 @@
   <main class="container">
 
     <header class="header">
+          
+      <!-- 방문자 카운터 (오른쪽 상단) -->
+      <div class="view-counter" aria-label="페이지 방문자 수">
+        <span class="counter-label">Total</span>
+        <span id="total-count" class="counter-value">-</span>
+      </div>
+
+      <br>
+      
       <h1>Dependency Tree Diff</h1>
       <p>Android 의존성 그래프 변경사항을 쉽게 비교해보세요</p>
 
-      <div class="view-counter">
-        <div class="counter-item">
-          <span class="counter-label">Today</span>
-          <span id="today-count" class="counter-value">-</span>
-        </div>
-        <span class="counter-divider">|</span>
-        <div class="counter-item">
-          <span class="counter-label">Total</span>
-          <span id="total-count" class="counter-value">-</span>
-        </div>
-      </div>
+
     </header>
 
     <section class="card upload">
@@ -118,7 +117,6 @@
         </ol>
       </div>
     </section>
-
   </main>
 
   <script defer src="./visitor-counter.js"></script>

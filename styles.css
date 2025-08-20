@@ -288,3 +288,27 @@ code.language-diff { letter-spacing: 0; }
   font-size: 14px;
   color: var(--neutral-600);
 }
+
+.header {
+  position: relative;
+  text-align: center;   /* 가운데 정렬 */
+  padding: 24px 0;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.header p {
+  margin: 4px 0 0;
+  font-size: 16px;
+  color: var(--neutral-600);
+}
+
+/* 방문자수 카운터는 우측 상단 */
+.header-meta {
+  position: absolute;
+  top: 0;
+  right: 0;
+}

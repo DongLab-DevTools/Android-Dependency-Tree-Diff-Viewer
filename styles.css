@@ -67,3 +67,105 @@ body{
   .grid{grid-template-columns:1fr}
   .container{padding:24px 16px}
 }
+
+/* ===============================
+   Diff Highlight – Light Git Style
+   =============================== */
+
+/* 코드 영역: 화이트 베이스 + 얇은 테두리 */
+.code-wrap {
+  border: 1px solid #e5e7eb;   /* neutral-200 */
+  border-radius: 12px;
+  overflow: auto;
+  background: #fff;            /* <<< 흰색 베이스 */
+}
+
+/* 기본 코드 타이포 + 컴팩트 라인 */
+.code-wrap pre {
+  margin: 0 !important;
+  padding: 16px 18px !important;
+  background: #fff !important;       /* <<< 흰색 */
+  color: #1f2937 !important;         /* neutral-800 */
+  font-size: 13.5px !important;
+  line-height: 1.35 !important;      /* 촘촘하게 */
+  white-space: pre;                   /* 가로 스크롤(트리 구조 깔끔) */
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  -webkit-font-smoothing: antialiased;
+  tab-size: 4;
+}
+
+/* 트리 구분자( |, +---, \--- )는 살짝 옅게 */
+code.language-diff .token.punctuation {
+  color: #9ca3af;  /* neutral-400 */
+}
+
+/* 접두문자(+, -, 공백) */
+code.language-diff .token.prefix {
+  display: inline-block;
+  width: 1ch;               /* 정렬 */
+  text-align: left;
+  margin-right: 6px;
+  font-weight: 600;
+  opacity: .9;
+}
+
+/* 공통 줄 스타일(여백 최소화) */
+code.language-diff .token {
+  line-height: 1.35;
+}
+
+/* 삭제(-) 라인: 붉은 텍스트 + 아주 옅은 배경 */
+code.language-diff .token.deleted {
+  display: block;
+  color: #dc2626;                              /* red-600 */
+  background: rgba(220, 38, 38, 0.06);         /* red-600 @ 6% */
+  border-left: 3px solid #ef4444;              /* red-500 */
+  padding: 1px 8px 1px 6px;
+  border-radius: 6px;
+}
+
+/* 추가(+) 라인: 초록 텍스트 + 아주 옅은 배경 */
+code.language-diff .token.inserted {
+  display: block;
+  color: #059669;                              /* emerald-600 */
+  background: rgba(5, 150, 105, 0.06);         /* emerald-600 @ 6% */
+  border-left: 3px solid #10b981;              /* emerald-500 */
+  padding: 1px 8px 1px 6px;
+  border-radius: 6px;
+}
+
+/* 변경 없음(스페이스) 라인: 일반 텍스트, 배경 없음 */
+code.language-diff .token.unchanged,
+code.language-diff .token.diff {
+  display: block;
+  color: #374151;      /* neutral-700 */
+  padding: 1px 8px 1px 9px;
+  border-radius: 4px;
+  background: transparent;
+}
+
+/* 길게 늘어나는 줄 대비: 접두문자, 파이프 간격 유지 */
+code.language-diff {
+  letter-spacing: 0;
+}
+
+/* ─────────────────────────────────
+   선택: 시스템 다크모드에서 자동 반전
+   (원하면 유지, 필요 없으면 이 블록 삭제)
+   ───────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .code-wrap { border-color: #374151; background: #111827; }
+  .code-wrap pre { background: #111827 !important; color: #e5e7eb !important; }
+  code.language-diff .token.punctuation { color: #6b7280; }
+  code.language-diff .token.deleted {
+    color: #fca5a5; background: rgba(239, 68, 68, 0.12); border-left-color: #ef4444;
+  }
+  code.language-diff .token.inserted {
+    color: #86efac; background: rgba(16, 185, 129, 0.12); border-left-color: #10b981;
+  }
+  code.language-diff .token.unchanged,
+  code.language-diff .token.diff {
+    color: #d1d5db;
+  }
+}

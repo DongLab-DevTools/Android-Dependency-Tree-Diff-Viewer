@@ -19,20 +19,25 @@ const errorBox   = document.getElementById('error');
 
 const noticeEl = document.getElementById('notice');
 
-/* ===== 큰 파일 판별 기준 (1MB / 30000줄 / 섹션 10000줄) ===== */
-const MAX_BYTES = 1 * 1024 * 1024;          // 1MB
-const MAX_LINES = 15000;                 // 전체 라인 수
+/* ===== 큰 파일 판별 기준 (1MB / 15000줄 / 섹션 5000줄) ===== */
+const MAX_BYTES = 1 * 1024 * 1024;      // 1MB
+const MAX_LINES = 15000;                // 전체 라인 수
 const MAX_DEP_SECTION_LINES = 5000;     // 의존성 섹션 라인 수
+
+// 초기엔 숨김
+errorBox.classList.add('hidden');
 
 function byteSize(str) {
   return new Blob([str || ""]).size;
 }
+
 function countLines(str) {
   if (!str) return 0;
   let n = 1, idx = -1;
   while ((idx = str.indexOf('\n', idx + 1)) !== -1) n++;
   return n;
 }
+
 function countDependencySectionLines(str) {
   if (!str) return 0;
   const lines = str.split(/\r\n|\n|\r/);
@@ -64,10 +69,20 @@ function updateNotice() {
 
 function setError(msg){
   errorBox.textContent = msg || "";
-  errorBox.style.display = msg ? "block" : "none";
+  // 메시지가 있으면 표시, 없으면 숨김 (notice와 동일한 hidden 토글)
+  errorBox.classList.toggle('hidden', !msg);
 }
+
 function enableCompare(){ btnCompare.disabled = !(oldText && newText); }
 function restoreDropVisual(el){ el.style.borderColor = ""; el.style.background = ""; }
+
+/* ✅ 파일 형식 검증: .txt 또는 MIME = text/plain */
+function isTxtFile(file){
+  if (!file) return false;
+  if (file.type === "text/plain") return true;          // 가장 신뢰도 높음
+  const name = (file.name || "").toLowerCase();
+  return name.endsWith(".txt");                          // 일부 브라우저는 type이 빈 문자열인 경우가 있어 확장자 보조
+}
 
 function readTxt(file, onLoad){
   if (!file) return;
@@ -80,39 +95,56 @@ function readTxt(file, onLoad){
 function wireDropArea(dropEl, inputEl, nameEl, setText){
   const setHas = has => dropEl.classList.toggle('has-file', !!has);
 
+  // input 선택 업로드
   inputEl.addEventListener('change', () => {
     const f = inputEl.files && inputEl.files[0];
     if (!f) return;
+    if (!isTxtFile(f)) {
+      setError("텍스트 파일(.txt)만 업로드 가능합니다.");
+      inputEl.value = "";
+      nameEl.textContent = "";
+      setHas(false);
+      return;
+    }
     readTxt(f, txt => {
       setText(txt);
       nameEl.textContent = f.name;
       setHas(true);
       enableCompare();
       setError("");
-      updateNotice(); // 선택 업로드 시 공지 갱신
+      updateNotice();
     });
   });
 
+  // 드래그&드롭 업로드
   dropEl.addEventListener('dragover', e => {
     e.preventDefault();
     dropEl.style.borderColor = 'var(--primary-blue)';
     dropEl.style.background = 'var(--primary-blue-light)';
+    // e.dataTransfer.dropEffect = 'copy'; // (선택) UX 힌트
   });
   dropEl.addEventListener('dragleave', e => { e.preventDefault(); restoreDropVisual(dropEl); });
   dropEl.addEventListener('drop', e => {
     e.preventDefault();
     const f = e.dataTransfer.files && e.dataTransfer.files[0];
-    if (f) {
-      inputEl.files = e.dataTransfer.files;
-      readTxt(f, txt => {
-        setText(txt);
-        nameEl.textContent = f.name;
-        setHas(true);
-        enableCompare();
-        setError("");
-        updateNotice(); // 드롭 업로드 시 공지 갱신 (보완됨)
-      });
+    if (!f) { restoreDropVisual(dropEl); return; }
+
+    if (!isTxtFile(f)) {
+      setError("텍스트 파일(.txt)만 업로드 가능합니다.");
+      restoreDropVisual(dropEl);
+      return; // ❌ 잘못된 형식은 무시
     }
+
+    // 올바른 형식만 처리
+    inputEl.files = e.dataTransfer.files; // 선택 업로드와 동일 상태로 맞춰줌
+    readTxt(f, txt => {
+      setText(txt);
+      nameEl.textContent = f.name;
+      setHas(true);
+      enableCompare();
+      setError("");
+      updateNotice();
+    });
     restoreDropVisual(dropEl);
   });
 }
@@ -142,7 +174,7 @@ btnCompare.addEventListener('click', async () => {
 btnCopy.addEventListener('click', async () => {
   try{
     await navigator.clipboard.writeText(codeDiff.textContent || "");
-    const old = btnCopy.textContent; btnCopy.textContent = "복사 완료!";
+  const old = btnCopy.textContent; btnCopy.textContent = "복사 완료!";
     setTimeout(()=> btnCopy.textContent = old, 1400);
   }catch{ setError("클립보드 복사에 실패했습니다."); }
 });
@@ -157,7 +189,7 @@ btnReset.addEventListener('click', () => {
   enableCompare();
   restoreDropVisual(dropOld);
   restoreDropVisual(dropNew);
-  updateNotice(); // 리셋 시 공지 숨김
+  updateNotice(); // 리셋 시 공지 갱신
 });
 
 // 초기 상태에서도 일관성 있게

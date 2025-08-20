@@ -1,24 +1,40 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dependency Tree Diff</title>
 
+  <script src="https://cdn.jsdelivr.net/npm/counterapi/dist/counter.browser.min.js"></script>
+
   <!-- Prism -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 
   <!-- App CSS -->
   <link rel="stylesheet" href="./styles.css" />
 </head>
+
 <body>
   <main class="container">
 
     <header class="header">
       <h1>Dependency Tree Diff</h1>
       <p>Android 의존성 그래프 변경사항을 쉽게 비교해보세요</p>
+
+      <div class="view-counter">
+        <div class="counter-item">
+          <span class="counter-label">Today</span>
+          <span id="today-count" class="counter-value">-</span>
+        </div>
+        <span class="counter-divider">|</span>
+        <div class="counter-item">
+          <span class="counter-label">Total</span>
+          <span id="total-count" class="counter-value">-</span>
+        </div>
+      </div>
     </header>
 
     <section class="card upload">
@@ -33,7 +49,7 @@
         <div class="field">
           <label for="file-old">기존 의존성 파일 (.txt)</label>
           <div class="drop" id="drop-old" role="button" aria-label="기존 파일 선택">
-            <input class="file-input" id="file-old" type="file" accept=".txt"/>
+            <input class="file-input" id="file-old" type="file" accept=".txt" />
             <div class="hint">클릭 또는 드래그하여 업로드</div>
             <div class="name" id="name-old" aria-live="polite"></div>
           </div>
@@ -41,7 +57,7 @@
         <div class="field">
           <label for="file-new">변경된 의존성 파일 (.txt)</label>
           <div class="drop" id="drop-new" role="button" aria-label="변경된 파일 선택">
-            <input class="file-input" id="file-new" type="file" accept=".txt"/>
+            <input class="file-input" id="file-new" type="file" accept=".txt" />
             <div class="hint">클릭 또는 드래그하여 업로드</div>
             <div class="name" id="name-new" aria-live="polite"></div>
           </div>
@@ -55,7 +71,7 @@
         </button>
         <button class="btn btn-secondary" id="btn-reset" type="button">초기화</button>
       </div>
-    
+
     </section>
 
     <section class="card result" id="result-card" style="display:none">
@@ -68,44 +84,48 @@
       </div>
     </section>
 
-<section class="guide-section" id="guide-deptree" style="display:block">
-  <button class="guide-toggle" type="button" aria-expanded="false">
-    📘 의존성 트리 출력 방법
-  </button>
+    <section class="guide-section" id="guide-deptree" style="display:block">
+      <button class="guide-toggle" type="button" aria-expanded="false">
+        📘 의존성 트리 출력 방법
+      </button>
 
-  <div class="guide-content" style="display:none">
-    <ol class="guide-steps">
-      <li class="guide-step">
-        <div class="guide-step-title">1. 변경 전 의존성 출력</div>
-        <div class="guide-note">현재 <strong>develop</strong> 브랜치 또는 변경 전 브랜치에서 실행하세요.</div>
-        <div class="guide-block">
-          <div class="guide-label">명령어</div>
-          <pre class="guide-code"><code>./gradlew app:dependencies --configuration {BuildVariant명} > before.txt</code></pre>
-        </div>
-      </li>
+      <div class="guide-content" style="display:none">
+        <ol class="guide-steps">
+          <li class="guide-step">
+            <div class="guide-step-title">1. 변경 전 의존성 출력</div>
+            <div class="guide-note">현재 <strong>develop</strong> 브랜치 또는 변경 전 브랜치에서 실행하세요.</div>
+            <div class="guide-block">
+              <div class="guide-label">명령어</div>
+              <pre
+                class="guide-code"><code>./gradlew app:dependencies --configuration {BuildVariant명} > before.txt</code></pre>
+            </div>
+          </li>
 
-      <li class="guide-step">
-        <div class="guide-step-title">2. 변경 후 의존성 출력</div>
-        <div class="guide-note">브랜치 변경 후 <strong>파일명만 다르게</strong> 저장하세요.</div>
-        <div class="guide-block">
-          <div class="guide-label">명령어</div>
-          <pre class="guide-code"><code>./gradlew app:dependencies --configuration {BuildVariant명} > after.txt</code></pre>
-        </div>
-      </li>
+          <li class="guide-step">
+            <div class="guide-step-title">2. 변경 후 의존성 출력</div>
+            <div class="guide-note">브랜치 변경 후 <strong>파일명만 다르게</strong> 저장하세요.</div>
+            <div class="guide-block">
+              <div class="guide-label">명령어</div>
+              <pre
+                class="guide-code"><code>./gradlew app:dependencies --configuration {BuildVariant명} > after.txt</code></pre>
+            </div>
+          </li>
 
-      <li class="guide-step">
-        <div class="guide-step-title">3. 비교하기</div>
-        <div class="guide-note"><code>before.txt</code>와 <code>after.txt</code>를 업로드해보세요.</div>
-      </li>
-    </ol>
-  </div>
-</section>
+          <li class="guide-step">
+            <div class="guide-step-title">3. 비교하기</div>
+            <div class="guide-note"><code>before.txt</code>와 <code>after.txt</code>를 업로드해보세요.</div>
+          </li>
+        </ol>
+      </div>
+    </section>
 
   </main>
 
+  <script defer src="./visitor-counter.js"></script>
   <!-- Core (diff 로직) 먼저 로드 -->
   <script defer src="./dependency-diff.js"></script>
   <!-- UI -->
   <script defer src="./app.js"></script>
 </body>
+
 </html>

@@ -47,7 +47,6 @@ function wireDropArea(dropEl, inputEl, nameEl, setText){
     if (f) { inputEl.files = e.dataTransfer.files; readTxt(f, txt => { setText(txt); nameEl.textContent = f.name; setHas(true); enableCompare(); setError(""); }); }
     restoreDropVisual(dropEl);
   });
-  dropEl.addEventListener('click', () => inputEl.click());
 }
 
 wireDropArea(dropOld, fileOld, nameOld, txt => oldText = txt);

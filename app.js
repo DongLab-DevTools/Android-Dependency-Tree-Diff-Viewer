@@ -20,6 +20,9 @@ const errorBox   = document.getElementById('error');
 const noticeEl = document.getElementById('notice');
 const guideSection = document.getElementById('guide-deptree');
 
+const guideToggle = document.querySelector('#guide-deptree .guide-toggle');
+const guideContent = document.querySelector('#guide-deptree .guide-content');
+
 /* ===== 큰 파일 판별 기준 (1MB / 15000줄 / 섹션 5000줄) ===== */
 const MAX_BYTES = 1 * 1024 * 1024;      // 1MB
 const MAX_LINES = 15000;                // 전체 라인 수
@@ -199,6 +202,12 @@ btnReset.addEventListener('click', () => {
   restoreDropVisual(dropOld);
   restoreDropVisual(dropNew);
   updateNotice(); // 리셋 시 공지 갱신
+});
+
+guideToggle.addEventListener('click', () => {
+  const expanded = guideToggle.getAttribute('aria-expanded') === 'true';
+  guideToggle.setAttribute('aria-expanded', !expanded);
+  guideContent.style.display = expanded ? 'none' : 'block';
 });
 
 // 초기 상태에서도 일관성 있게

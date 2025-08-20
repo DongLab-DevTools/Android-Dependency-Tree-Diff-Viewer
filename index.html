@@ -69,34 +69,38 @@
     </section>
 
 <section class="guide-section" id="guide-deptree" style="display:block">
-  <h2 class="guide-title">의존성 트리 출력하는 방법</h2>
+  <button class="guide-toggle" type="button" aria-expanded="false">
+    📘 의존성 트리 출력 방법
+  </button>
 
-  <ol class="guide-steps">
-    <li class="guide-step">
-      <div class="guide-step-title">1. 변경 전 의존성 출력</div>
-      <div class="guide-note">현재 <strong>develop</strong> 브랜치 또는 변경 전 브랜치에서 실행해 주세요.</div>
-      <div class="guide-block">
-        <div class="guide-label">명령어</div>
-        <pre class="guide-code"><code class="">./gradlew app:dependencies --configuration {BuildVariant명} &gt; before.txt</code></pre>
-      </div>
-    </li>
+  <div class="guide-content" style="display:none">
+    <ol class="guide-steps">
+      <li class="guide-step">
+        <div class="guide-step-title">1. 변경 전 의존성 출력</div>
+        <div class="guide-note">현재 <strong>develop</strong> 브랜치 또는 변경 전 브랜치에서 실행하세요.</div>
+        <div class="guide-block">
+          <div class="guide-label">명령어</div>
+          <pre class="guide-code"><code>./gradlew app:dependencies --configuration {BuildVariant명} > before.txt</code></pre>
+        </div>
+      </li>
 
-    <li class="guide-step">
-      <div class="guide-step-title">2. 변경 후 의존성 출력</div>
-      <div class="guide-note">브랜치를 옮긴 후 동일한 명령어로 <strong>파일명만 다르게</strong> 저장합니다.</div>
-      <div class="guide-block">
-        <div class="guide-label">명령어</div>
-        <pre class="guide-code"><code class="">./gradlew app:dependencies --configuration {BuildVariant명} &gt; after.txt</code></pre>
-      </div>
-    
-    </li>
+      <li class="guide-step">
+        <div class="guide-step-title">2. 변경 후 의존성 출력</div>
+        <div class="guide-note">브랜치 변경 후 <strong>파일명만 다르게</strong> 저장하세요.</div>
+        <div class="guide-block">
+          <div class="guide-label">명령어</div>
+          <pre class="guide-code"><code>./gradlew app:dependencies --configuration {BuildVariant명} > after.txt</code></pre>
+        </div>
+      </li>
 
-    <li class="guide-step">
-      <div class="guide-step-title">3. 비교하기</div>
-      <div class="guide-note">위에서 저장한 <code>before.txt</code>와 <code>after.txt</code>를 업로드해 보세요.</div>
-    </li>
-  </ol>
+      <li class="guide-step">
+        <div class="guide-step-title">3. 비교하기</div>
+        <div class="guide-note"><code>before.txt</code>와 <code>after.txt</code>를 업로드해보세요.</div>
+      </li>
+    </ol>
+  </div>
 </section>
+
   </main>
 
   <!-- Core (diff 로직) 먼저 로드 -->

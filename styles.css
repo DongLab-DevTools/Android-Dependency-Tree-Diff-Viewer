@@ -2,7 +2,7 @@
   --primary-blue:#3182f6; --primary-blue-hover:#2968d7; --primary-blue-light:#e8f3ff;
   --neutral-50:#f9fafb; --neutral-100:#f2f4f6; --neutral-200:#e5e8eb; --neutral-300:#d1d6db;
   --neutral-400:#b0b8c1; --neutral-600:#6b7684; --neutral-800:#333d4b; --neutral-900:#191f28;
-  --green-500:#00c73c; --red-500:#f04452;
+  --green-500:#10b981; --red-500:#ef4444;
 }
 *{box-sizing:border-box}
 html,body{height:100%}

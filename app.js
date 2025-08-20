@@ -18,6 +18,7 @@ const codeDiff   = document.getElementById('code-diff');
 const errorBox   = document.getElementById('error');
 
 const noticeEl = document.getElementById('notice');
+const guideSection = document.getElementById('guide-deptree');
 
 /* ===== 큰 파일 판별 기준 (1MB / 15000줄 / 섹션 5000줄) ===== */
 const MAX_BYTES = 1 * 1024 * 1024;      // 1MB
@@ -155,8 +156,13 @@ wireDropArea(dropNew, fileNew, nameNew, txt => newText = txt);
 // 비교 실행
 btnCompare.addEventListener('click', async () => {
   setError("");
-  btnCompare.disabled = true; btnLabel.textContent = "비교 중..."; spinner.style.display = "inline-block";
+  btnCompare.disabled = true; 
+  btnLabel.textContent = "비교 중..."; 
+  resultCard.style.display = "block";
+  guideSection.style.display = "none"; // 결과 있을 땐 가이드 숨김
+  spinner.style.display = "inline-block";
   codeDiff.textContent = "";
+
   try{
     await new Promise(r => setTimeout(r, 120));
     const diff = dependencyTreeDiff(oldText, newText); // dependency-diff.js의 함수
@@ -184,7 +190,10 @@ btnReset.addEventListener('click', () => {
   fileOld.value = ""; fileNew.value = "";
   nameOld.textContent = ""; nameNew.textContent = "";
   dropOld.classList.remove('has-file'); dropNew.classList.remove('has-file');
-  resultCard.style.display = "none"; codeDiff.textContent = "";
+  resultCard.style.display = "none";
+  codeDiff.textContent = "";
+  guideSection.style.display = "block"; // 결과 없으니 가이드 노출
+
   setError("");
   enableCompare();
   restoreDropVisual(dropOld);

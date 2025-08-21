@@ -8,6 +8,8 @@
  * Public:
  *   window.dependencyOnlyDiff(oldText, newText) -> string
  *   window.diffFilesOnly(beforeFile, afterFile) -> Promise<string>
+ *   window.dependencyTreeDiffFlattened(oldText, newText) -> string
+ *   window.diffFilesFlattened(beforeFile, afterFile) -> Promise<string>
  */
 
 /* ============================ Public API ============================ */
@@ -51,28 +53,23 @@ function dependencyOnlyDiff(oldStr, newStr) {
   }
 
   // 2) Added only in after (OLD엔 없고 NEW에만)
-  const added = [];
+  const addedPairs = [];
   for (const [id, vers] of newIdx.versionsById.entries()) {
     if (oldIdx.idSet.has(id)) continue; // 동일 좌표가 OLD에도 있으면 위에서 처리됨(버전 변경/무시)
-    // NEW 안에서 최초로 관측된 들여쓰기(prefix)를 하나 골라서 사용
-    const sampleNode = newIdx.firstNodeById.get(id);
+    const sampleNode = newIdx.firstNodeById.get(id); // 접두부 복원용
+    const prefix = sampleNode ? sampleNode.prefix : "+--- ";
     for (const ver of vers) {
-      added.push("+\\--- " + id + (ver ? ":" + ver : ""), sampleNode?.prefix);
+      // 접두부가 있으면 원래 트리 느낌 유지, 없으면 표준 "+--- " 사용
+      const body = id + (ver ? ":" + ver : "");
+      addedPairs.push(prefix + body);
     }
   }
-  if (added.length) {
+
+  if (addedPairs.length) {
     out += "\n# Added (only in after)\n";
     // 보기 좋게 정렬
-    const lines = [];
-    for (let i = 0; i < added.length; i += 2) {
-      const text = added[i];
-      const prefix = added[i + 1] || "";
-      // prefix가 있으면 prefix 뒤에 좌표를 붙여, 원래 트리 느낌을 살림
-      const line = prefix ? prefix + text.replace(/^[+\\-]+---\s*/, "") : text;
-      lines.push(line);
-    }
-    lines.sort((a, b) => a.localeCompare(b));
-    for (const l of lines) out += l + "\n";
+    addedPairs.sort((a, b) => a.localeCompare(b));
+    for (const l of addedPairs) out += l + "\n";
   }
 
   return out.trimEnd();
@@ -83,13 +80,19 @@ async function diffFilesOnly(beforeFile, afterFile) {
   return dependencyOnlyDiff(oldStr, newStr);
 }
 
-// 플래튼드 형태 diff (요약 탭용)
+/* ============================ Flattened(요약) – resolved 좌표 기준 ============================ */
+
 function dependencyTreeDiffFlattened(oldStr, newStr){
   const oldMap = buildResolvedMapFlattened(oldStr);   // { "group:artifact": "version" }
   const newMap = buildResolvedMapFlattened(newStr);
 
   const diff = diffMapsFlattened(oldMap, newMap);
   return formatReportFlattened(diff);
+}
+
+async function diffFilesFlattened(beforeFile, afterFile){
+  const [oldStr, newStr] = await Promise.all([beforeFile.text(), afterFile.text()]);
+  return dependencyTreeDiffFlattened(oldStr, newStr);
 }
 
 function buildResolvedMapFlattened(text){
@@ -107,7 +110,6 @@ function splitLinesFlattened(s){ return (s||"").split(/\r\n|\n|\r/); }
 
 function parseLineToCoordinateFlattened(line){
   if (!line) return null;
-  if (line.includes("project :")) return null; // 멀티모듈 항목은 제외
 
   // 트리 글리프/선두 부호 제거: "+---", "\---", "|    " 등
   const stripped = line
@@ -116,11 +118,16 @@ function parseLineToCoordinateFlattened(line){
     .trim();
 
   // 빠른 거르기
-  if (!stripped || stripped.indexOf(":") < 0) return null;
-  if (stripped.startsWith("Extends") || stripped.startsWith("No dependencies")) return null;
+  if (!stripped || stripped.startsWith("Extends") || stripped.startsWith("No dependencies")) {
+    return null;
+  }
 
-  // 예) "com.a:b:1.0" 또는 "com.a:b:1.0 -> 2.0"
-  // 버전 토큰은 공백/괄호 앞에서 끝남: "(c)", "(*)", "{strictly ...}" 등 무시
+  // 1) project 모듈 처리: key=원문("project :a:b"), version=구분 토큰
+  if (/^project\s*:/.test(stripped)) {
+    return { key: stripped, resolved: "(project)" };
+  }
+
+  // 2) 좌표 처리: "g:a:1.0" 또는 "g:a:1.0 -> 2.0"
   const m = stripped.match(
     /^([a-zA-Z0-9_.\-]+):([a-zA-Z0-9_.\-]+):([^\s({]+)(?:\s*->\s*([^\s({]+))?/
   );
@@ -129,7 +136,7 @@ function parseLineToCoordinateFlattened(line){
   const group = m[1];
   const artifact = m[2];
   const declaredVer = m[3];
-  const arrowVer = m[4]; // 있으면 이것이 최종 해결 버전
+  const arrowVer = m[4];
 
   const key = `${group}:${artifact}`;
   const resolved = arrowVer || declaredVer;
@@ -160,7 +167,6 @@ function diffMapsFlattened(before, after){
     }
   }
 
-  // 보기 좋게 정렬
   added.sort((a,b)=>a.key.localeCompare(b.key));
   removed.sort((a,b)=>a.key.localeCompare(b.key));
   changed.sort((a,b)=>a.key.localeCompare(b.key));
@@ -169,7 +175,7 @@ function diffMapsFlattened(before, after){
 }
 
 function formatReportFlattened({ added, removed, changed }){
-  const pad = (s, n) => (s + " ".repeat(n)).slice(0, n);
+  const pad = (s, n) => (s + " ".repeat(n)).slice(0, Math.max(n, s.length));
   let out = "";
   out += "=== Dependency Diff (flattened by resolved coordinates) ===\n\n";
 
@@ -202,8 +208,9 @@ function formatReportFlattened({ added, removed, changed }){
 
 // 전역 노출
 window.dependencyOnlyDiff = dependencyOnlyDiff;
-window.dependencyTreeDiffFlattened = dependencyTreeDiffFlattened;
 window.diffFilesOnly = diffFilesOnly;
+window.dependencyTreeDiffFlattened = dependencyTreeDiffFlattened;
+window.diffFilesFlattened = diffFilesFlattened;
 
 /* ============================ Internals ============================ */
 
@@ -239,7 +246,7 @@ function parseDependencyLines(text) {
 // 좌표/버전 정규화 (project, "->" 버전 전이, 괄호 주석 제거)
 function extractIdAndVersion(content) {
   let s = String(content || "").trim();
-  s = s.replace(/\s+\(.*\)$/u, ""); // "(...)" 꼬리 제거
+  s = s.replace(/\s+$begin:math:text$.*$end:math:text$$/u, ""); // "(...)" 꼬리 제거
 
   // project 라인
   if (s.startsWith("project ")) {

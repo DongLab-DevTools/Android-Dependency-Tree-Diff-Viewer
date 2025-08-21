@@ -321,3 +321,46 @@ code.language-diff { letter-spacing: 0; }
   top: 0;
   right: 0;
 }
+
+/* ===============================
+   탭 스타일 (기존 스타일과 일관성 유지)
+   =============================== */
+.diff-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--neutral-200);
+  margin-bottom: 16px;
+  gap: 0;
+}
+
+.tab-btn {
+  appearance: none;
+  border: none;
+  background: var(--neutral-50);
+  color: var(--neutral-600);
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease-in-out;
+  border-radius: 8px 8px 0 0;
+}
+
+.tab-btn:hover {
+  background: var(--neutral-100);
+  color: var(--neutral-800);
+}
+
+.tab-btn.active {
+  background: #fff;
+  color: var(--primary-blue);
+  border-bottom-color: var(--primary-blue);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}

@@ -84,8 +84,31 @@
           <button class="btn btn-secondary" id="btn-md-download" type="button">마크다운으로 저장</button>
         </div>
       </div>
-      <div class="code-wrap" id="capture-area">
-        <pre><code class="language-diff" id="code-diff"></code></pre>
+      
+      <!-- 탭 메뉴 -->
+      <div class="diff-tabs">
+        <button class="tab-btn active" data-tab="enhanced">전체 출력</button>
+        <button class="tab-btn" data-tab="original">변경 된 부분만 출력</button>
+        <button class="tab-btn" data-tab="flattened">요약</button>
+      </div>
+      
+      <!-- 탭 컨텐츠 -->
+      <div class="tab-content active" id="tab-enhanced">
+        <div class="code-wrap" id="capture-area-enhanced">
+          <pre><code class="language-diff" id="code-diff-enhanced"></code></pre>
+        </div>
+      </div>
+      
+      <div class="tab-content" id="tab-original">
+        <div class="code-wrap" id="capture-area-original">
+          <pre><code class="language-diff" id="code-diff-original"></code></pre>
+        </div>
+      </div>
+      
+      <div class="tab-content" id="tab-flattened">
+        <div class="code-wrap" id="capture-area-flattened">
+          <pre><code class="language-diff" id="code-diff-flattened"></code></pre>
+        </div>
       </div>
     </section>
 
@@ -127,6 +150,8 @@
 
   <script defer src="./js/visitor-counter.js"></script>
   <!-- Core (diff 로직) 먼저 로드 -->
+  <script defer src="./js/dependency-diff.js"></script>
+  <script defer src="./js/dependency-only-diff.js"></script>
   <script defer src="./js/dependency-diff-tree-full-enhanced.js"></script>
   <!-- UI -->
   <script defer src="./js/app.js"></script>

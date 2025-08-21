@@ -14,8 +14,14 @@ const btnReset   = document.getElementById('btn-reset');
 const btnCopy    = document.getElementById('btn-copy');
 
 const resultCard = document.getElementById('result-card');
-const codeDiff   = document.getElementById('code-diff');
+const codeDiffEnhanced = document.getElementById('code-diff-enhanced');
+const codeDiffOriginal = document.getElementById('code-diff-original');
+const codeDiffFlattened = document.getElementById('code-diff-flattened');
 const errorBox   = document.getElementById('error');
+
+// 탭 관련 요소들
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
 
 const noticeEl = document.getElementById('notice');
 const guideSection = document.getElementById('guide-deptree');
@@ -164,13 +170,27 @@ btnCompare.addEventListener('click', async () => {
   resultCard.style.display = "block";
   guideSection.style.display = "none"; // 결과 있을 땐 가이드 숨김
   spinner.style.display = "inline-block";
-  codeDiff.textContent = "";
+  codeDiffEnhanced.textContent = "";
+  codeDiffOriginal.textContent = "";
+  codeDiffFlattened.textContent = "";
 
   try{
     await new Promise(r => setTimeout(r, 120));
-    const diff = dependencyTreeDiff(oldText, newText); // dependency-diff.js의 함수
-    codeDiff.textContent = diff || "변경사항이 없습니다.";
-    Prism.highlightElement(codeDiff);
+    
+    // 각 탭별로 다른 diff 함수 호출
+    const diffEnhanced = dependencyTreeDiffEnhanced(oldText, newText);
+    const diffOriginal = dependencyTreeDiffOriginal(oldText, newText);
+    const diffFlattened = dependencyTreeDiffFlattened(oldText, newText);
+    
+    codeDiffEnhanced.textContent = diffEnhanced || "변경사항이 없습니다.";
+    codeDiffOriginal.textContent = diffOriginal || "변경사항이 없습니다.";
+    codeDiffFlattened.textContent = diffFlattened || "변경사항이 없습니다.";
+    
+    // 각 요소에 대해 Prism 하이라이팅 적용
+    Prism.highlightElement(codeDiffEnhanced);
+    Prism.highlightElement(codeDiffOriginal);
+    Prism.highlightElement(codeDiffFlattened);
+    
     resultCard.style.display = "block";
     resultCard.scrollIntoView({behavior:"smooth"});
   }catch(e){
@@ -182,8 +202,11 @@ btnCompare.addEventListener('click', async () => {
 
 btnCopy.addEventListener('click', async () => {
   try{
-    await navigator.clipboard.writeText(codeDiff.textContent || "");
-  const old = btnCopy.textContent; btnCopy.textContent = "복사 완료!";
+    // 현재 활성화된 탭의 내용을 복사
+    const activeTab = document.querySelector('.tab-content.active');
+    const activeCode = activeTab.querySelector('code');
+    await navigator.clipboard.writeText(activeCode.textContent || "");
+    const old = btnCopy.textContent; btnCopy.textContent = "복사 완료!";
     setTimeout(()=> btnCopy.textContent = old, 1400);
   }catch{ setError("클립보드 복사에 실패했습니다."); }
 });
@@ -194,7 +217,9 @@ btnReset.addEventListener('click', () => {
   nameOld.textContent = ""; nameNew.textContent = "";
   dropOld.classList.remove('has-file'); dropNew.classList.remove('has-file');
   resultCard.style.display = "none";
-  codeDiff.textContent = "";
+  codeDiffEnhanced.textContent = "";
+  codeDiffOriginal.textContent = "";
+  codeDiffFlattened.textContent = "";
   guideSection.style.display = "block"; // 결과 없으니 가이드 노출
 
   setError("");
@@ -214,7 +239,9 @@ guideToggle.addEventListener('click', () => {
 // 비교 결과 캡쳐 
 // ===== 스크린샷 저장 =====
 const btnScreenshot = document.getElementById("btn-screenshot");
-const captureArea = document.getElementById("capture-area");
+const captureAreaEnhanced = document.getElementById("capture-area-enhanced");
+const captureAreaOriginal = document.getElementById("capture-area-original");
+const captureAreaFlattened = document.getElementById("capture-area-flattened");
 
 // 유틸: 다운로드
 function downloadDataUrl(dataUrl, filename) {
@@ -258,19 +285,44 @@ async function captureWithDomToImage(el) {
 
 btnScreenshot?.addEventListener("click", async () => {
   try {
+    // 현재 활성화된 탭의 캡쳐 영역 선택
+    const activeTab = document.querySelector('.tab-content.active');
+    const activeCaptureArea = activeTab.querySelector('.code-wrap');
+    const activeTabName = activeTab.id.replace('tab-', '');
+    
     // 우선 html2canvas 시도
-    const dataUrl = await captureWithHtml2Canvas(captureArea);
-    downloadDataUrl(dataUrl, "dependency-diff.png");
+    const dataUrl = await captureWithHtml2Canvas(activeCaptureArea);
+    downloadDataUrl(dataUrl, `dependency-diff-${activeTabName}.png`);
   } catch (e1) {
     console.warn("html2canvas 실패, dom-to-image-more로 폴백:", e1);
     try {
-      const dataUrl = await captureWithDomToImage(captureArea);
-      downloadDataUrl(dataUrl, "dependency-diff.png");
+      const activeTab = document.querySelector('.tab-content.active');
+      const activeCaptureArea = activeTab.querySelector('.code-wrap');
+      const activeTabName = activeTab.id.replace('tab-', '');
+      
+      const dataUrl = await captureWithDomToImage(activeCaptureArea);
+      downloadDataUrl(dataUrl, `dependency-diff-${activeTabName}.png`);
     } catch (e2) {
       console.error("스크린샷 생성 실패:", e2);
       setError("스크린샷 생성에 실패했습니다. 브라우저를 새로고침 후 다시 시도해 주세요.");
     }
   }
+});
+
+// 탭 이벤트 리스너 추가
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const targetTab = btn.getAttribute('data-tab');
+    
+    // 모든 탭 버튼에서 active 제거
+    tabBtns.forEach(b => b.classList.remove('active'));
+    // 모든 탭 컨텐츠에서 active 제거
+    tabContents.forEach(content => content.classList.remove('active'));
+    
+    // 클릭된 탭 버튼과 해당 컨텐츠에 active 추가
+    btn.classList.add('active');
+    document.getElementById(`tab-${targetTab}`).classList.add('active');
+  });
 });
 
 // 초기 상태에서도 일관성 있게

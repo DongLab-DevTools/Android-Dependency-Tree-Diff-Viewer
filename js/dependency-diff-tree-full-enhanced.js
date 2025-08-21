@@ -17,26 +17,26 @@
 /* ============================ Public API ============================ */
 
 
-function dependencyTreeDiff(oldStr, newStr) {
-    const oldNodesAll = parseDependencyLines(oldStr);
-    const newNodesAll = parseDependencyLines(newStr);
+function dependencyTreeDiffEnhanced(oldStr, newStr) {
+    const oldNodesAll = parseDependencyLinesEnhanced(oldStr);
+    const newNodesAll = parseDependencyLinesEnhanced(newStr);
 
     // 노이즈 정리(버전 없는 중복·평탄 요약 제거)
-    const oldNodes = filterNoise(oldNodesAll);
-    const newNodes = filterNoise(newNodesAll);
+    const oldNodes = filterNoiseEnhanced(oldNodesAll);
+    const newNodes = filterNoiseEnhanced(newNodesAll);
 
     // NEW 쪽 인덱스 준비
     const {
         versionsById: newVersionsById,
         pairSet: newPairSet,
         idSet: newIdSet
-    } = buildIndexes(newNodes);
+    } = buildIndexesEnhanced(newNodes);
 
     const {
         versionsById: oldVersionsById,
         pairSet: oldPairSet,
         idSet: oldIdSet
-    } = buildIndexes(oldNodes);
+    } = buildIndexesEnhanced(oldNodes);
 
     // 1) 본문: 기존(OLD) 트리 원문 라인 그대로 출력 + 상태 마킹
     let out = "";
@@ -59,7 +59,7 @@ function dependencyTreeDiff(oldStr, newStr) {
             const newVers = Array.from(newVersionsById.get(id) || []);
             for (const nv of newVers) {
                 if (nv === ver) continue; // 혹시 동일 버전 섞여 있으면 스킵
-                out += "+" + synthesizeLine(node, id, nv) + "\n";
+                out += "+" + synthesizeLineEnhanced(node, id, nv) + "\n";
             }
         }
     }
@@ -82,19 +82,19 @@ function dependencyTreeDiff(oldStr, newStr) {
     return out.trimEnd();
 }
 
-async function diffFiles(beforeFile, afterFile) {
+async function diffFilesEnhanced(beforeFile, afterFile) {
     const [oldStr, newStr] = await Promise.all([beforeFile.text(), afterFile.text()]);
-    return dependencyTreeDiff(oldStr, newStr);
+    return dependencyTreeDiffEnhanced(oldStr, newStr);
 }
 
 // 전역 노출
-window.dependencyTreeDiff = dependencyTreeDiff;
-window.diffFiles = diffFiles;
+window.dependencyTreeDiffEnhanced = dependencyTreeDiffEnhanced;
+window.diffFilesEnhanced = diffFilesEnhanced;
 
 /* ============================ Internals ============================ */
 
 // Gradle 라인 파싱: "+--- ...", "\--- ..." 만 수집
-function parseDependencyLines(text) {
+function parseDependencyLinesEnhanced(text) {
     const lines = (text || "").split(/\r\n|\n|\r/);
     const nodes = [];
 
@@ -109,7 +109,7 @@ function parseDependencyLines(text) {
         // 들여쓰기의 깊이(가짜 변경 필터 힌트용)
         const depth = Math.floor(idx / 5);
 
-        const { id, ver, isProject } = extractIdAndVersion(content);
+        const { id, ver, isProject } = extractIdAndVersionEnhanced(content);
 
         nodes.push({
             line: raw,         // 원문 라인 (diff 때 그대로 씀)
@@ -125,7 +125,7 @@ function parseDependencyLines(text) {
 }
 
 // 좌표/버전 정규화
-function extractIdAndVersion(content) {
+function extractIdAndVersionEnhanced(content) {
     let s = String(content || "").trim();
 
     // 괄호 주석류 제거: " ... (c)" / "(*)", "(n)" 등
@@ -162,7 +162,7 @@ function extractIdAndVersion(content) {
 //  - 같은 좌표에 "버전 없는 라인"이 있으며, 어디든 "버전 있는 라인"이 존재하면 버전 없는 라인은 제거
 //  - depth==0 에서 같은 (id,ver)가 이전에 한 번이라도 나오면(깊이 무관) 그 라인은 평탄 요약으로 간주하고 제거
 //  - project 라인은 절대 제거하지 않음
-function filterNoise(nodes) {
+function filterNoiseEnhanced(nodes) {
     const hasVersionById = new Map(); // id -> true(버전 존재 본 적 있음)
     for (const n of nodes) {
         if (!n.isProject && n.version) hasVersionById.set(n.identity, true);
@@ -193,7 +193,7 @@ function filterNoise(nodes) {
 }
 
 // 인덱스 구성
-function buildIndexes(nodes) {
+function buildIndexesEnhanced(nodes) {
     const versionsById = new Map(); // id -> Set(versions)
     const pairSet = new Set();      // "id@ver"
     const idSet = new Set();      // Set(id)
@@ -209,7 +209,7 @@ function buildIndexes(nodes) {
 }
 
 // OLD 라인과 동일한 들여쓰기를 유지한 채 NEW 버전 라인 합성
-function synthesizeLine(oldNode, id, version) {
+function synthesizeLineEnhanced(oldNode, id, version) {
     // oldNode.prefix는 "   |    +--- " 같은 트리 접두부까지 포함
     return oldNode.prefix + id + (version ? ":" + version : "");
 }

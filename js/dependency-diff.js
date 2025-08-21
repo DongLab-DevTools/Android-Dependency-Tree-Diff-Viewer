@@ -1,18 +1,18 @@
 // Kotlin: dependency-tree-diff 알고리즘을 브라우저 JS로 포팅
 
-function dependencyTreeDiff(oldStr, newStr){
-  const oldPaths = findDependencyPaths(oldStr);
-  const newPaths = findDependencyPaths(newStr);
-  const removedTree = buildTree(pathsMinus(oldPaths, newPaths));
-  const addedTree   = buildTree(pathsMinus(newPaths, oldPaths));
-  return appendDiff(removedTree, addedTree, "");
+function dependencyTreeDiffOriginal(oldStr, newStr){
+  const oldPaths = findDependencyPathsOriginal(oldStr);
+  const newPaths = findDependencyPathsOriginal(newStr);
+  const removedTree = buildTreeOriginal(pathsMinusOriginal(oldPaths, newPaths));
+  const addedTree   = buildTreeOriginal(pathsMinusOriginal(newPaths, oldPaths));
+  return appendDiffOriginal(removedTree, addedTree, "");
 }
 
-function splitLines(s){ return (s||"").split(/\r\n|\n|\r/); }
+function splitLinesOriginal(s){ return (s||"").split(/\r\n|\n|\r/); }
 
 // 원본 findDependencyPaths
-function findDependencyPaths(text){
-  const linesAll = splitLines(text);
+function findDependencyPathsOriginal(text){
+  const linesAll = splitLinesOriginal(text);
 
   // dropWhile { !startsWith("+--- ") && !startsWith("\---") }
   let start = -1;
@@ -51,13 +51,13 @@ function findDependencyPaths(text){
   return paths; // Array<List<String>>
 }
 
-class Node{
+class NodeOriginal{
   constructor(coordinate, versionInfo){ this.coordinate = coordinate; this.versionInfo = versionInfo; this.children = []; }
   toString(){ return `${this.coordinate}:${this.versionInfo}`; }
 }
 
 // 원본 buildTree
-function buildTree(paths){
+function buildTreeOriginal(paths){
   const root = [];
   for (const path of paths){
     let nodes = root;
@@ -73,7 +73,7 @@ function buildTree(paths){
       if (found){
         nodes = found.children;
       } else {
-        const nn = new Node(coordinate, versionInfo);
+        const nn = new NodeOriginal(coordinate, versionInfo);
         nodes.push(nn);
         nodes = nn.children;
       }
@@ -83,24 +83,24 @@ function buildTree(paths){
 }
 
 // Set<List<String>> 차집합과 동일한 효과
-function pathsMinus(a, b){
+function pathsMinusOriginal(a, b){
   const key = p => p.join("\u0001");
   const bset = new Set(b.map(key));
   return a.filter(p => !bset.has(key));
 }
 
-function treesEqual(a, b){
+function treesEqualOriginal(a, b){
   if (a.length !== b.length) return false;
   for (let i=0;i<a.length;i++){
     const x=a[i], y=b[i];
     if (x.coordinate !== y.coordinate || x.versionInfo !== y.versionInfo) return false;
-    if (!treesEqual(x.children, y.children)) return false;
+    if (!treesEqualOriginal(x.children, y.children)) return false;
   }
   return true;
 }
 
 // 원본 append 계열
-function appendNode(diffChar, indent, item, last){
+function appendNodeOriginal(diffChar, indent, item, last){
   let out = "";
   out += diffChar;
   out += indent;
@@ -113,16 +113,16 @@ function appendNode(diffChar, indent, item, last){
   return { out, nextIndent };
 }
 
-function appendAdded(node, indent, last){
-  const { out, nextIndent } = appendNode('+', indent, node, last);
-  return out + appendDiff([], node.children, nextIndent);
+function appendAddedOriginal(node, indent, last){
+  const { out, nextIndent } = appendNodeOriginal('+', indent, node, last);
+  return out + appendDiffOriginal([], node.children, nextIndent);
 }
-function appendRemoved(node, indent, last){
-  const { out, nextIndent } = appendNode('-', indent, node, last);
-  return out + appendDiff(node.children, [], nextIndent);
+function appendRemovedOriginal(node, indent, last){
+  const { out, nextIndent } = appendNodeOriginal('-', indent, node, last);
+  return out + appendDiffOriginal(node.children, [], nextIndent);
 }
 
-function appendDiff(oldTree, newTree, indent){
+function appendDiffOriginal(oldTree, newTree, indent){
   let out = "";
   let oldIndex = 0, newIndex = 0;
   while (oldIndex < oldTree.length && newIndex < newTree.length){
@@ -131,29 +131,29 @@ function appendDiff(oldTree, newTree, indent){
     if (oldNode.coordinate === newNode.coordinate){
       if (oldNode.versionInfo === newNode.versionInfo){
         const last = (oldIndex === oldTree.length - 1) && (newIndex === newTree.length - 1);
-        const r = appendNode(' ', indent, oldNode, last);
+        const r = appendNodeOriginal(' ', indent, oldNode, last);
         out += r.out;
-        out += appendDiff(oldNode.children, newNode.children, r.nextIndent);
+        out += appendDiffOriginal(oldNode.children, newNode.children, r.nextIndent);
       }else{
         // 최적화: 자식이 동일하면 생략
-        const childrenChanged = !treesEqual(oldNode.children, newNode.children);
-        const rOld = appendNode('-', indent, oldNode, (oldIndex === oldTree.length - 1));
+        const childrenChanged = !treesEqualOriginal(oldNode.children, newNode.children);
+        const rOld = appendNodeOriginal('-', indent, oldNode, (oldIndex === oldTree.length - 1));
         out += rOld.out;
-        if (childrenChanged) out += appendDiff(oldNode.children, [], rOld.nextIndent);
-        const rNew = appendNode('+', indent, newNode, (newIndex === newTree.length - 1));
+        if (childrenChanged) out += appendDiffOriginal(oldNode.children, [], rOld.nextIndent);
+        const rNew = appendNodeOriginal('+', indent, newNode, (newIndex === newTree.length - 1));
         out += rNew.out;
-        if (childrenChanged) out += appendDiff([], newNode.children, rOld.nextIndent);
+        if (childrenChanged) out += appendDiffOriginal([], newNode.children, rOld.nextIndent);
       }
       oldIndex++; newIndex++;
     } else if (oldNode.coordinate < newNode.coordinate){
-      out += appendRemoved(oldNode, indent, (oldIndex === oldTree.length - 1));
+      out += appendRemovedOriginal(oldNode, indent, (oldIndex === oldTree.length - 1));
       oldIndex++;
     } else {
-      out += appendAdded(newNode, indent, (newIndex === newTree.length - 1));
+      out += appendAddedOriginal(newNode, indent, (newIndex === newTree.length - 1));
       newIndex++;
     }
   }
-  for (let i=oldIndex;i<oldTree.length;i++) out += appendRemoved(oldTree[i], indent, (i === oldTree.length - 1));
-  for (let i=newIndex;i<newTree.length;i++) out += appendAdded(newTree[i], indent, (i === newTree.length - 1));
+  for (let i=oldIndex;i<oldTree.length;i++) out += appendRemovedOriginal(oldTree[i], indent, (i === oldTree.length - 1));
+  for (let i=newIndex;i<newTree.length;i++) out += appendAddedOriginal(newTree[i], indent, (i === newTree.length - 1));
   return out;
 }

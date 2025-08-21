@@ -1,19 +1,19 @@
 // Kotlin: dependency-tree-diff 알고리즘을 브라우저 JS로 포팅 (수정 버전)
 // 핵심 변경: 경로(트리) 기반 비교 -> "좌표:해결버전" 평탄화 비교
 
-function dependencyTreeDiff(oldStr, newStr){
-  const oldMap = buildResolvedMap(oldStr);   // { "group:artifact": "version" }
-  const newMap = buildResolvedMap(newStr);
+function dependencyTreeDiffFlattened(oldStr, newStr){
+  const oldMap = buildResolvedMapFlattened(oldStr);   // { "group:artifact": "version" }
+  const newMap = buildResolvedMapFlattened(newStr);
 
-  const diff = diffMaps(oldMap, newMap);
-  return formatReport(diff);
+  const diff = diffMapsFlattened(oldMap, newMap);
+  return formatReportFlattened(diff);
 }
 
 /** 문자열을 줄 단위로 */
-function splitLines(s){ return (s||"").split(/\r\n|\n|\r/); }
+function splitLinesFlattened(s){ return (s||"").split(/\r\n|\n|\r/); }
 
 /** 한 줄 파싱: 트리 글리프/메타토큰 제거 후 좌표와 "해결된 버전" 추출 */
-function parseLineToCoordinate(line){
+function parseLineToCoordinateFlattened(line){
   if (!line) return null;
   if (line.includes("project :")) return null; // 멀티모듈 항목은 제외
 
@@ -47,10 +47,10 @@ function parseLineToCoordinate(line){
 }
 
 /** 전체 텍스트를 평탄화 맵으로 변환: { "g:a": "resolvedVersion" } */
-function buildResolvedMap(text){
+function buildResolvedMapFlattened(text){
   const map = Object.create(null);
-  for (const raw of splitLines(text)){
-    const p = parseLineToCoordinate(raw);
+  for (const raw of splitLinesFlattened(text)){
+    const p = parseLineToCoordinateFlattened(raw);
     if (!p) continue;
     // 동일 coords가 여러 번 나오면 "마지막(최종) 해결 버전"이 덮어쓰게 둠
     map[p.key] = p.resolved;
@@ -59,7 +59,7 @@ function buildResolvedMap(text){
 }
 
 /** 두 맵 비교 */
-function diffMaps(before, after){
+function diffMapsFlattened(before, after){
   const beforeKeys = Object.keys(before);
   const afterKeys = Object.keys(after);
   const bset = new Set(beforeKeys);
@@ -90,7 +90,7 @@ function diffMaps(before, after){
 }
 
 /** 결과 문자열 포맷 (브라우저 콘솔/텍스트뷰 등에 그대로 표시 가능) */
-function formatReport({ added, removed, changed }){
+function formatReportFlattened({ added, removed, changed }){
   const pad = (s, n) => (s + " ".repeat(n)).slice(0, n);
   let out = "";
   out += "=== Dependency Diff (flattened by resolved coordinates) ===\n\n";
@@ -127,17 +127,17 @@ function formatReport({ added, removed, changed }){
    더 이상 호출하지 않음. 필요 없으면 삭제해도 무방.
 ───────────────────────────────────────────────────────────────*/
 
-class Node{
+class NodeFlattened{
   constructor(coordinate, versionInfo){ this.coordinate = coordinate; this.versionInfo = versionInfo; this.children = []; }
   toString(){ return `${this.coordinate}:${this.versionInfo}`; }
 }
 
 // 아래 함수들은 현재 미사용
-function findDependencyPaths(){ return []; }
-function buildTree(){ return []; }
-function pathsMinus(a,b){ return a; }
-function treesEqual(){ return true; }
-function appendNode(){ return { out:"", nextIndent:"" }; }
-function appendAdded(){ return ""; }
-function appendRemoved(){ return ""; }
-function appendDiff(){ return ""; }
+function findDependencyPathsFlattened(){ return []; }
+function buildTreeFlattened(){ return []; }
+function pathsMinusFlattened(a,b){ return a; }
+function treesEqualFlattened(){ return true; }
+function appendNodeFlattened(){ return { out:"", nextIndent:"" }; }
+function appendAddedFlattened(){ return ""; }
+function appendRemovedFlattened(){ return ""; }
+function appendDiffFlattened(){ return ""; }

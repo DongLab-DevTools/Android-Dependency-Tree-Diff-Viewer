@@ -53,4 +53,4 @@ Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과
 
 ---
 
-> 이 도구는 [JakeWharton/dependency-tree-diff](https://github.com/JakeWharton/dependency-tree-diff)의 알고리즘을 웹으로 포팅한 것입니다.
+> 이 도구는 [JakeWharton/dependency-tree-diff](https://github.com/JakeWharton/dependency-tree-diff)의 알고리즘을 개선하여 웹으로 포팅한 것입니다.

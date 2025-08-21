@@ -1,215 +1,215 @@
-
 /**
- * Gradle dependencies 트리 비교 (브라우저 전용)
- * - 기존(OLD) 트리를 "그대로" 출력하고, 각 라인 앞에 diff 기호만 붙임: ' ' 유지 / '-' 삭제 / '+' 추가·변경
- * - 좌표 비교는 path(부모/깊이)와 무관하게 group:artifact 또는 "project :..." 단위로 수행
- * - 버전 변경은 OLD 라인에 '-'를 붙여 출력 후, 같은 들여쓰기로 NEW 버전을 '+' 라인으로 바로 밑에 추가
- * - project 모듈도 동일 규칙으로 감지
- * - 트리 깊이가 바뀌어도(모듈 추가 등) 동일 좌표면 변경으로 보지 않음 → 가짜 변경 방지
- * - Gradle 하단의 "평탄(플랫) 요약 섹션"과 버전 없는 중복 라인은 자동 무시(특히 버전 없는 ↔ 버전 있는 가짜 변경 제거)
- * - 의존성 추가(OLD에 없고 NEW에만 있는 좌표)는 본문 끝에 "Added (only in after)" 섹션으로 정리
+ * Gradle dependencies 트리 비교 (브라우저 전용, 전체 트리 + 변경 표시)
+ * - 두 트리를 병합해 모든 노드를 출력하고, 앞에 diff 기호만 부여:
+ *   ' ' 유지 / '-' 삭제 / '+' 추가 / 버전변경은 '-' old 다음 줄에 '+' new
+ * - 좌표 비교는 path/깊이 무관하게 group:artifact 또는 "project :..." 기준
+ * - 경로만 바뀐 이동은 변경 아님(동일 좌표 & 버전이면 ' ')
+ * - 평탄 요약/버전 없는 중복 라인 제거
  *
- * 공개 API:
- *   window.dependencyTreeDiff(oldText, newText) -> string
- *   window.diffFiles(beforeFile, afterFile) -> Promise<string>
+ * Public:
+ *   window.dependencyTreeDiffEnhanced(oldText, newText) -> string
+ *   window.diffFilesEnhanced(beforeFile, afterFile) -> Promise<string>
  */
 
 /* ============================ Public API ============================ */
 
-
 function dependencyTreeDiffEnhanced(oldStr, newStr) {
-    const oldNodesAll = parseDependencyLinesEnhanced(oldStr);
-    const newNodesAll = parseDependencyLinesEnhanced(newStr);
+  const oldNodesAll = parseDependencyLinesEnhanced(oldStr);
+  const newNodesAll = parseDependencyLinesEnhanced(newStr);
 
-    // 노이즈 정리(버전 없는 중복·평탄 요약 제거)
-    const oldNodes = filterNoiseEnhanced(oldNodesAll);
-    const newNodes = filterNoiseEnhanced(newNodesAll);
+  const oldNodes = filterNoiseEnhanced(oldNodesAll);
+  const newNodes = filterNoiseEnhanced(newNodesAll);
 
-    // NEW 쪽 인덱스 준비
-    const {
-        versionsById: newVersionsById,
-        pairSet: newPairSet,
-        idSet: newIdSet
-    } = buildIndexesEnhanced(newNodes);
+  const oldTree = buildTreeEnhanced(oldNodes);
+  const newTree = buildTreeEnhanced(newNodes);
 
-    const {
-        versionsById: oldVersionsById,
-        pairSet: oldPairSet,
-        idSet: oldIdSet
-    } = buildIndexesEnhanced(oldNodes);
-
-    // 1) 본문: 기존(OLD) 트리 원문 라인 그대로 출력 + 상태 마킹
-    let out = "";
-    for (const node of oldNodes) {
-        const id = node.identity;
-        const ver = node.version;
-        const pairKey = id + "@" + ver;
-        const existsSamePairInNew = newPairSet.has(pairKey);
-        const existsIdInNew = newIdSet.has(id);
-
-        if (existsSamePairInNew) {
-            // 그대로 유지
-            out += " " + node.line + "\n";
-        } else if (!existsIdInNew) {
-            // 통째로 사라짐
-            out += "-" + node.line + "\n";
-        } else {
-            // 좌표는 존재하나 버전이 바뀜 -> OLD '-' 출력 후 NEW 버전(들) '+' 출력
-            out += "-" + node.line + "\n";
-            const newVers = Array.from(newVersionsById.get(id) || []);
-            for (const nv of newVers) {
-                if (nv === ver) continue; // 혹시 동일 버전 섞여 있으면 스킵
-                out += "+" + synthesizeLineEnhanced(node, id, nv) + "\n";
-            }
-        }
-    }
-
-    // 2) Added only in after: OLD에는 없고 NEW에만 있는 좌표들
-    const addedLines = [];
-    for (const [id, set] of newVersionsById.entries()) {
-        if (oldIdSet.has(id)) continue; // 좌표 자체가 OLD에도 있으면 본문에서 처리됨
-        for (const ver of set) {
-            addedLines.push("+\\--- " + id + (ver ? ":" + ver : ""));
-        }
-    }
-    if (addedLines.length) {
-        out += "\n# Added (only in after)\n";
-        // 보기 좋게 아이디 → 버전 순 정렬
-        addedLines.sort((a, b) => a.localeCompare(b));
-        out += addedLines.join("\n") + "\n";
-    }
-
-    return out.trimEnd();
+  return mergeAndFormat(oldTree, newTree).trimEnd();
 }
 
 async function diffFilesEnhanced(beforeFile, afterFile) {
-    const [oldStr, newStr] = await Promise.all([beforeFile.text(), afterFile.text()]);
-    return dependencyTreeDiffEnhanced(oldStr, newStr);
+  const [oldStr, newStr] = await Promise.all([beforeFile.text(), afterFile.text()]);
+  return dependencyTreeDiffEnhanced(oldStr, newStr);
 }
 
-// 전역 노출
 window.dependencyTreeDiffEnhanced = dependencyTreeDiffEnhanced;
 window.diffFilesEnhanced = diffFilesEnhanced;
 
 /* ============================ Internals ============================ */
 
-// Gradle 라인 파싱: "+--- ...", "\--- ..." 만 수집
+// 파싱: 한 줄에 대한 메타
 function parseDependencyLinesEnhanced(text) {
-    const lines = (text || "").split(/\r\n|\n|\r/);
-    const nodes = [];
+  const lines = (text || "").split(/\r\n|\n|\r/);
+  const nodes = [];
 
-    for (let i = 0; i < lines.length; i++) {
-        const raw = lines[i];
-        const idx = raw.indexOf("--- ");
-        if (idx < 0) continue;                 // 트리 라인 아님
-        // 브랜치 기호 앞쪽(들여쓰기 + '|' 등)을 그대로 유지
-        const prefix = raw.substring(0, idx + 4); // e.g. "    |    +--- "
-        const content = raw.substring(idx + 4);   // e.g. "group:artifact:1.2.3 (..)"
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const idx = raw.indexOf("--- ");
+    if (idx < 0) continue;
 
-        // 들여쓰기의 깊이(가짜 변경 필터 힌트용)
-        const depth = Math.floor(idx / 5);
+    const prefix = raw.substring(0, idx + 4); // "│   +--- "
+    const content = raw.substring(idx + 4);
+    const depth = Math.floor(idx / 5);
 
-        const { id, ver, isProject } = extractIdAndVersionEnhanced(content);
+    const { id, ver, isProject } = extractIdAndVersionEnhanced(content);
 
-        nodes.push({
-            line: raw,         // 원문 라인 (diff 때 그대로 씀)
-            prefix,            // 새 '+' 라인 합성용
-            content,           // 좌표 텍스트
-            identity: id,      // 비교 키 (group:artifact) 또는 "project :xxx"
-            version: ver,      // "" 허용(프로젝트 모듈)
-            isProject,
-            depth,
-        });
-    }
-    return nodes;
+    nodes.push({
+      line: raw,        // 원문 전체 (접두부 포함)
+      prefix,           // 접두부 (새 줄 합성용)
+      content,          // 좌표 텍스트
+      identity: id,     // group:artifact 또는 "project :xxx"
+      version: ver,     // "" 허용 (project)
+      isProject,
+      depth,
+    });
+  }
+  return nodes;
 }
 
 // 좌표/버전 정규화
 function extractIdAndVersionEnhanced(content) {
-    let s = String(content || "").trim();
+  let s = String(content || "").trim();
+  s = s.replace(/\s+\(.*\)$/u, ""); // 꼬리 주석 제거
 
-    // 괄호 주석류 제거: " ... (c)" / "(*)", "(n)" 등
-    s = s.replace(/\s+\(.*\)$/u, "");
+  if (s.startsWith("project ")) {
+    return { id: s, ver: "", isProject: true };
+  }
 
-    // project 모듈은 버전 없음
-    if (s.startsWith("project ")) {
-        return { id: s, ver: "", isProject: true };
-    }
-
-    // 버전 전이: "a:b:1.0 -> 2.0" 형태면 -> 뒤 버전을 채택
-    const arrow = s.indexOf(" -> ");
-    if (arrow !== -1) {
-        const left = s.substring(0, arrow).trim();     // a:b:1.0
-        const right = s.substring(arrow + 4).trim();   // 2.0 ...
-        const lastColon = left.lastIndexOf(":");
-        const id = lastColon === -1 ? left : left.substring(0, lastColon);
-        const ver = right.split(/\s+/)[0];             // 2.0
-        return { id, ver, isProject: false };
-    }
-
-    // 일반: a:b:1.2.3
-    const lastColon = s.lastIndexOf(":");
-    if (lastColon === -1) {
-        // 비정형 — 안전하게 전체를 id로
-        return { id: s, ver: "", isProject: false };
-    }
-    const id = s.substring(0, lastColon);
-    const ver = s.substring(lastColon + 1).split(/\s+/)[0];
+  const arrow = s.indexOf(" -> ");
+  if (arrow !== -1) {
+    const left = s.substring(0, arrow).trim();
+    const right = s.substring(arrow + 4).trim();
+    const lastColon = left.lastIndexOf(":");
+    const id = lastColon === -1 ? left : left.substring(0, lastColon);
+    const ver = right.split(/\s+/)[0];
     return { id, ver, isProject: false };
+  }
+
+  const lastColon = s.lastIndexOf(":");
+  if (lastColon === -1) {
+    return { id: s, ver: "", isProject: false };
+  }
+  const id = s.substring(0, lastColon);
+  const ver = s.substring(lastColon + 1).split(/\s+/)[0];
+  return { id, ver, isProject: false };
 }
 
-// 노이즈/중복 제거:
-//  - 같은 좌표에 "버전 없는 라인"이 있으며, 어디든 "버전 있는 라인"이 존재하면 버전 없는 라인은 제거
-//  - depth==0 에서 같은 (id,ver)가 이전에 한 번이라도 나오면(깊이 무관) 그 라인은 평탄 요약으로 간주하고 제거
-//  - project 라인은 절대 제거하지 않음
+// 노이즈 제거 (평탄 요약/버전없는 중복)
 function filterNoiseEnhanced(nodes) {
-    const hasVersionById = new Map(); // id -> true(버전 존재 본 적 있음)
-    for (const n of nodes) {
-        if (!n.isProject && n.version) hasVersionById.set(n.identity, true);
+  const hasVersionById = new Map();
+  for (const n of nodes) {
+    if (!n.isProject && n.version) hasVersionById.set(n.identity, true);
+  }
+
+  const seenTop = new Set();
+  const result = [];
+
+  for (const n of nodes) {
+    if (!n.isProject && !n.version && hasVersionById.get(n.identity)) continue;
+
+    const key = n.identity + "@" + n.version;
+    if (n.depth === 0) {
+      if (seenTop.has(key)) continue;
+      seenTop.add(key);
     }
-
-    const seenPair = new Set(); // id@ver, 이전 출현 여부(깊이 무관)
-    const result = [];
-
-    for (const n of nodes) {
-        const id = n.identity;
-        const ver = n.version;
-
-        // (1) 버전 없는 라인 제거 (동일 좌표에 버전 라인이 하나라도 있으면)
-        if (!n.isProject && !ver && hasVersionById.get(id)) {
-            continue;
-        }
-
-        // (2) 평탄 요약 제거: 최상위(depth==0)에서 이미 동일 (id,ver) 본 적 있으면 drop
-        const key = id + "@" + ver;
-        if (n.depth === 0) {
-            if (seenPair.has(key)) continue;
-            seenPair.add(key);
-        }
-
-        result.push(n);
-    }
-    return result;
+    result.push(n);
+  }
+  return result;
 }
 
-// 인덱스 구성
-function buildIndexesEnhanced(nodes) {
-    const versionsById = new Map(); // id -> Set(versions)
-    const pairSet = new Set();      // "id@ver"
-    const idSet = new Set();      // Set(id)
+// 트리 구성 (각 노드는 line/prefix/identity/version/children)
+function buildTreeEnhanced(parsed) {
+  const root = [];
+  const stack = []; // 각 depth의 마지막 노드
 
-    for (const n of nodes) {
-        idSet.add(n.identity);
-        const set = versionsById.get(n.identity) || new Set();
-        set.add(n.version);
-        versionsById.set(n.identity, set);
-        pairSet.add(n.identity + "@" + n.version);
+  for (const n of parsed) {
+    // stack을 깊이에 맞게 정리
+    while (stack.length > n.depth) stack.pop();
+
+    const node = {
+      identity: n.identity,
+      version: n.version,
+      line: n.line,
+      prefix: n.prefix,
+      children: [],
+    };
+
+    if (stack.length === 0) {
+      root.push(node);
+    } else {
+      stack[stack.length - 1].children.push(node);
     }
-    return { versionsById, pairSet, idSet };
+    stack.push(node);
+  }
+  return root;
 }
 
-// OLD 라인과 동일한 들여쓰기를 유지한 채 NEW 버전 라인 합성
-function synthesizeLineEnhanced(oldNode, id, version) {
-    // oldNode.prefix는 "   |    +--- " 같은 트리 접두부까지 포함
-    return oldNode.prefix + id + (version ? ":" + version : "");
+// 병합 출력: NEW 순서를 기준으로 끼워넣기
+function mergeAndFormat(oldChildren, newChildren) {
+  let out = "";
+
+  // OLD 인덱스: 같은 부모의 자식들에서 좌표별 목록(원래 순서 유지)
+  const oldById = new Map(); // id -> [nodes...]
+  for (const o of oldChildren) {
+    if (!oldById.has(o.identity)) oldById.set(o.identity, []);
+    oldById.get(o.identity).push(o);
+  }
+  const usedOld = new Set(); // 매칭/소비된 OLD 노드
+
+  // 1) NEW 순서대로 훑으면서 그 자리에 출력
+  for (const n of newChildren) {
+    const candidates = oldById.get(n.identity) || [];
+
+    // 동일 버전 우선 매칭
+    let same = null, sameIdx = -1;
+    for (let i = 0; i < candidates.length; i++) {
+      const c = candidates[i];
+      if (usedOld.has(c)) continue;
+      if (c.version === n.version) { same = c; sameIdx = i; break; }
+    }
+
+    if (same) {
+      usedOld.add(same);
+      // 유지: OLD 라인을 NEW의 자리에서 출력
+      out += " " + same.line + "\n";
+      out += mergeAndFormat(same.children, n.children);
+      continue;
+    }
+
+    // 좌표만 같고 버전 다른 경우(버전 변경)
+    let diff = null, diffIdx = -1;
+    for (let i = 0; i < candidates.length; i++) {
+      const c = candidates[i];
+      if (usedOld.has(c)) continue;
+      // 동일 좌표 → 버전 변경으로 간주
+      diff = c; diffIdx = i; break;
+    }
+
+    if (diff) {
+      usedOld.add(diff);
+      out += "-" + diff.line + "\n";
+      out += "+" + n.line + "\n";
+      out += mergeAndFormat(diff.children, n.children);
+      continue;
+    }
+
+    // OLD에 대응 좌표 자체가 없음 → NEW 순수 추가 (그 자리에서 + 서브트리 전체)
+    out += emitSubtree(n, "+");
+  }
+
+  // 2) NEW에 없어서 매칭 안 된 OLD 노드들 → 삭제
+  for (const o of oldChildren) {
+    if (usedOld.has(o)) continue;
+    out += emitSubtree(o, "-");
+  }
+
+  return out;
+}
+
+// 서브트리 일괄 출력 (기호 고정)
+function emitSubtree(node, sign) {
+  let out = sign + node.line + "\n";
+  for (const ch of node.children) {
+    out += emitSubtree(ch, sign);
+  }
+  return out;
 }

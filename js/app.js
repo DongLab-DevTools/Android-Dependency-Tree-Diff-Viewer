@@ -15,7 +15,7 @@ const btnCopy    = document.getElementById('btn-copy');
 
 const resultCard = document.getElementById('result-card');
 const codeDiffEnhanced = document.getElementById('code-diff-enhanced');
-const codeDiffOriginal = document.getElementById('code-diff-original');
+const codeDiffOnlyDiff = document.getElementById('code-diff-only-diff');
 const codeDiffFlattened = document.getElementById('code-diff-flattened');
 const errorBox   = document.getElementById('error');
 
@@ -171,7 +171,7 @@ btnCompare.addEventListener('click', async () => {
   guideSection.style.display = "none"; // 결과 있을 땐 가이드 숨김
   spinner.style.display = "inline-block";
   codeDiffEnhanced.textContent = "";
-  codeDiffOriginal.textContent = "";
+  codeDiffOnlyDiff.textContent = "";
   codeDiffFlattened.textContent = "";
 
   try{
@@ -179,16 +179,16 @@ btnCompare.addEventListener('click', async () => {
     
     // 각 탭별로 다른 diff 함수 호출
     const diffEnhanced = dependencyTreeDiffEnhanced(oldText, newText);
-    const diffOriginal = dependencyTreeDiffOriginal(oldText, newText);
+    const diffOnlyDiff = dependencyOnlyDiff(oldText, newText);
     const diffFlattened = dependencyTreeDiffFlattened(oldText, newText);
     
     codeDiffEnhanced.textContent = diffEnhanced || "변경사항이 없습니다.";
-    codeDiffOriginal.textContent = diffOriginal || "변경사항이 없습니다.";
+    codeDiffOnlyDiff.textContent = diffOnlyDiff || "변경사항이 없습니다.";
     codeDiffFlattened.textContent = diffFlattened || "변경사항이 없습니다.";
     
     // 각 요소에 대해 Prism 하이라이팅 적용
     Prism.highlightElement(codeDiffEnhanced);
-    Prism.highlightElement(codeDiffOriginal);
+    Prism.highlightElement(codeDiffOnlyDiff);
     Prism.highlightElement(codeDiffFlattened);
     
     resultCard.style.display = "block";
@@ -218,7 +218,7 @@ btnReset.addEventListener('click', () => {
   dropOld.classList.remove('has-file'); dropNew.classList.remove('has-file');
   resultCard.style.display = "none";
   codeDiffEnhanced.textContent = "";
-  codeDiffOriginal.textContent = "";
+  codeDiffOnlyDiff.textContent = "";
   codeDiffFlattened.textContent = "";
   guideSection.style.display = "block"; // 결과 없으니 가이드 노출
 
@@ -240,7 +240,7 @@ guideToggle.addEventListener('click', () => {
 // ===== 스크린샷 저장 =====
 const btnScreenshot = document.getElementById("btn-screenshot");
 const captureAreaEnhanced = document.getElementById("capture-area-enhanced");
-const captureAreaOriginal = document.getElementById("capture-area-original");
+const captureAreaOnlyDiff = document.getElementById("capture-area-only-diff");
 const captureAreaFlattened = document.getElementById("capture-area-flattened");
 
 // 유틸: 다운로드

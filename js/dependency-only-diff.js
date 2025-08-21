@@ -1,6 +1,89 @@
-// Kotlin: dependency-tree-diff 알고리즘을 브라우저 JS로 포팅 (수정 버전)
-// 핵심 변경: 경로(트리) 기반 비교 -> "좌표:해결버전" 평탄화 비교
+/**
+ * Gradle dependencies "변경된 부분만" 트리 출력
+ * - 전체 트리는 출력하지 않고, 변경/삭제/추가 라인만 트리 접두부를 보존해 보여줌
+ * - 좌표 비교는 깊이 무관(group:artifact 또는 "project :...") / 경로 이동은 변경 아님
+ * - 버전 변경: OLD('-') 한 줄 출력 후, 같은 들여쓰기로 NEW('+') 줄 바로 밑에 추가
+ * - 평탄 요약/버전 없는 중복 라인 자동 무시
+ *
+ * Public:
+ *   window.dependencyOnlyDiff(oldText, newText) -> string
+ *   window.diffFilesOnly(beforeFile, afterFile) -> Promise<string>
+ */
 
+/* ============================ Public API ============================ */
+
+function dependencyOnlyDiff(oldStr, newStr) {
+  const oldNodesAll = parseDependencyLines(oldStr);
+  const newNodesAll = parseDependencyLines(newStr);
+
+  // 노이즈 제거 (평탄 요약, 버전없는 중복)
+  const oldNodes = filterNoise(oldNodesAll);
+  const newNodes = filterNoise(newNodesAll);
+
+  // 인덱스
+  const oldIdx = buildIndexes(oldNodes);
+  const newIdx = buildIndexes(newNodes);
+
+  let out = "";
+
+  // 1) 삭제/버전변경 (OLD 기준으로 훑음)
+  for (const node of oldNodes) {
+    const id = node.identity;
+    const ver = node.version;
+
+    const inNewSamePair = newIdx.pairSet.has(id + "@" + ver);
+    if (inNewSamePair) continue; // 변경 없음 → 출력하지 않음
+
+    const existsIdInNew = newIdx.idSet.has(id);
+    if (!existsIdInNew) {
+      // 통째로 삭제
+      out += "-" + node.line + "\n";
+      continue;
+    }
+
+    // 버전 변경: OLD('-') + NEW('+')
+    out += "-" + node.line + "\n";
+    const newVers = Array.from(newIdx.versionsById.get(id) || []);
+    for (const nv of newVers) {
+      if (nv === ver) continue;
+      out += "+" + synthesizeLine(node, id, nv) + "\n";
+    }
+  }
+
+  // 2) Added only in after (OLD엔 없고 NEW에만)
+  const added = [];
+  for (const [id, vers] of newIdx.versionsById.entries()) {
+    if (oldIdx.idSet.has(id)) continue; // 동일 좌표가 OLD에도 있으면 위에서 처리됨(버전 변경/무시)
+    // NEW 안에서 최초로 관측된 들여쓰기(prefix)를 하나 골라서 사용
+    const sampleNode = newIdx.firstNodeById.get(id);
+    for (const ver of vers) {
+      added.push("+\\--- " + id + (ver ? ":" + ver : ""), sampleNode?.prefix);
+    }
+  }
+  if (added.length) {
+    out += "\n# Added (only in after)\n";
+    // 보기 좋게 정렬
+    const lines = [];
+    for (let i = 0; i < added.length; i += 2) {
+      const text = added[i];
+      const prefix = added[i + 1] || "";
+      // prefix가 있으면 prefix 뒤에 좌표를 붙여, 원래 트리 느낌을 살림
+      const line = prefix ? prefix + text.replace(/^[+\\-]+---\s*/, "") : text;
+      lines.push(line);
+    }
+    lines.sort((a, b) => a.localeCompare(b));
+    for (const l of lines) out += l + "\n";
+  }
+
+  return out.trimEnd();
+}
+
+async function diffFilesOnly(beforeFile, afterFile) {
+  const [oldStr, newStr] = await Promise.all([beforeFile.text(), afterFile.text()]);
+  return dependencyOnlyDiff(oldStr, newStr);
+}
+
+// 플래튼드 형태 diff (요약 탭용)
 function dependencyTreeDiffFlattened(oldStr, newStr){
   const oldMap = buildResolvedMapFlattened(oldStr);   // { "group:artifact": "version" }
   const newMap = buildResolvedMapFlattened(newStr);
@@ -9,10 +92,19 @@ function dependencyTreeDiffFlattened(oldStr, newStr){
   return formatReportFlattened(diff);
 }
 
-/** 문자열을 줄 단위로 */
+function buildResolvedMapFlattened(text){
+  const map = Object.create(null);
+  for (const raw of splitLinesFlattened(text)){
+    const p = parseLineToCoordinateFlattened(raw);
+    if (!p) continue;
+    // 동일 coords가 여러 번 나오면 "마지막(최종) 해결 버전"이 덮어쓰게 둠
+    map[p.key] = p.resolved;
+  }
+  return map;
+}
+
 function splitLinesFlattened(s){ return (s||"").split(/\r\n|\n|\r/); }
 
-/** 한 줄 파싱: 트리 글리프/메타토큰 제거 후 좌표와 "해결된 버전" 추출 */
 function parseLineToCoordinateFlattened(line){
   if (!line) return null;
   if (line.includes("project :")) return null; // 멀티모듈 항목은 제외
@@ -46,19 +138,6 @@ function parseLineToCoordinateFlattened(line){
   return { key, resolved };
 }
 
-/** 전체 텍스트를 평탄화 맵으로 변환: { "g:a": "resolvedVersion" } */
-function buildResolvedMapFlattened(text){
-  const map = Object.create(null);
-  for (const raw of splitLinesFlattened(text)){
-    const p = parseLineToCoordinateFlattened(raw);
-    if (!p) continue;
-    // 동일 coords가 여러 번 나오면 "마지막(최종) 해결 버전"이 덮어쓰게 둠
-    map[p.key] = p.resolved;
-  }
-  return map;
-}
-
-/** 두 맵 비교 */
 function diffMapsFlattened(before, after){
   const beforeKeys = Object.keys(before);
   const afterKeys = Object.keys(after);
@@ -89,7 +168,6 @@ function diffMapsFlattened(before, after){
   return { added, removed, changed };
 }
 
-/** 결과 문자열 포맷 (브라우저 콘솔/텍스트뷰 등에 그대로 표시 가능) */
 function formatReportFlattened({ added, removed, changed }){
   const pad = (s, n) => (s + " ".repeat(n)).slice(0, n);
   let out = "";
@@ -122,22 +200,127 @@ function formatReportFlattened({ added, removed, changed }){
   return out;
 }
 
-/* ──────────────────────────────────────────────────────────────
-   (참고) 기존 트리 기반 로직은 아래처럼 남겨두어도 되지만,
-   더 이상 호출하지 않음. 필요 없으면 삭제해도 무방.
-───────────────────────────────────────────────────────────────*/
+// 전역 노출
+window.dependencyOnlyDiff = dependencyOnlyDiff;
+window.dependencyTreeDiffFlattened = dependencyTreeDiffFlattened;
+window.diffFilesOnly = diffFilesOnly;
 
-class NodeFlattened{
-  constructor(coordinate, versionInfo){ this.coordinate = coordinate; this.versionInfo = versionInfo; this.children = []; }
-  toString(){ return `${this.coordinate}:${this.versionInfo}`; }
+/* ============================ Internals ============================ */
+
+// Gradle 라인 파싱: "+--- ...", "\--- ..." 만 수집
+function parseDependencyLines(text) {
+  const lines = (text || "").split(/\r\n|\n|\r/);
+  const nodes = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const idx = raw.indexOf("--- ");
+    if (idx < 0) continue; // 트리 라인 아님
+
+    const prefix = raw.substring(0, idx + 4); // "│   +--- " 포함
+    const content = raw.substring(idx + 4);
+
+    const depth = Math.floor(idx / 5);
+    const { id, ver, isProject } = extractIdAndVersion(content);
+
+    nodes.push({
+      line: raw,   // 전체 라인(원문) — 접두부 포함
+      prefix,      // 새 라인 합성용
+      content,     // 좌표 텍스트
+      identity: id,
+      version: ver,
+      isProject,
+      depth,
+    });
+  }
+  return nodes;
 }
 
-// 아래 함수들은 현재 미사용
-function findDependencyPathsFlattened(){ return []; }
-function buildTreeFlattened(){ return []; }
-function pathsMinusFlattened(a,b){ return a; }
-function treesEqualFlattened(){ return true; }
-function appendNodeFlattened(){ return { out:"", nextIndent:"" }; }
-function appendAddedFlattened(){ return ""; }
-function appendRemovedFlattened(){ return ""; }
-function appendDiffFlattened(){ return ""; }
+// 좌표/버전 정규화 (project, "->" 버전 전이, 괄호 주석 제거)
+function extractIdAndVersion(content) {
+  let s = String(content || "").trim();
+  s = s.replace(/\s+\(.*\)$/u, ""); // "(...)" 꼬리 제거
+
+  // project 라인
+  if (s.startsWith("project ")) {
+    return { id: s, ver: "", isProject: true };
+  }
+
+  // 버전 전이 "a:b:1.0 -> 2.0"
+  const arrow = s.indexOf(" -> ");
+  if (arrow !== -1) {
+    const left = s.substring(0, arrow).trim();
+    const right = s.substring(arrow + 4).trim();
+    const lastColon = left.lastIndexOf(":");
+    const id = lastColon === -1 ? left : left.substring(0, lastColon);
+    const ver = right.split(/\s+/)[0];
+    return { id, ver, isProject: false };
+  }
+
+  // 일반 "a:b:1.2.3"
+  const lastColon = s.lastIndexOf(":");
+  if (lastColon === -1) {
+    return { id: s, ver: "", isProject: false }; // 방어
+  }
+  const id = s.substring(0, lastColon);
+  const ver = s.substring(lastColon + 1).split(/\s+/)[0];
+  return { id, ver, isProject: false };
+}
+
+// 노이즈 제거
+// - 같은 좌표(id)에 "버전 없는 라인"이 있고, 어디든 "버전 있는 라인"이 있으면 버전 없는 라인은 제거
+// - depth==0 에서 중복 (id@ver)은 평탄 요약으로 보고 제거
+// - project 라인은 보존(버전 없음 정상)
+function filterNoise(nodes) {
+  const hasVersionById = new Map();
+  for (const n of nodes) {
+    if (!n.isProject && n.version) hasVersionById.set(n.identity, true);
+  }
+
+  const seenPairAtTop = new Set();
+  const result = [];
+
+  for (const n of nodes) {
+    const id = n.identity;
+    const ver = n.version;
+
+    if (!n.isProject && !ver && hasVersionById.get(id)) continue;
+
+    const key = id + "@" + ver;
+    if (n.depth === 0) {
+      if (seenPairAtTop.has(key)) continue;
+      seenPairAtTop.add(key);
+    }
+
+    result.push(n);
+  }
+  return result;
+}
+
+// 인덱스 구성
+function buildIndexes(nodes) {
+  const versionsById = new Map(); // id -> Set(versions)
+  const pairSet = new Set();      // "id@ver"
+  const idSet = new Set();        // Set(id)
+  const firstNodeById = new Map();// id -> 최초 관측 노드(접두부 재사용용)
+
+  for (const n of nodes) {
+    idSet.add(n.identity);
+
+    if (!firstNodeById.has(n.identity)) {
+      firstNodeById.set(n.identity, n);
+    }
+
+    const set = versionsById.get(n.identity) || new Set();
+    set.add(n.version);
+    versionsById.set(n.identity, set);
+
+    pairSet.add(n.identity + "@" + n.version);
+  }
+  return { versionsById, pairSet, idSet, firstNodeById };
+}
+
+// OLD의 접두부(prefix)를 그대로 사용해 NEW 버전을 합성
+function synthesizeLine(oldNode, id, version) {
+  return oldNode.prefix + id + (version ? ":" + version : "");
+}

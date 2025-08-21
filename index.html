@@ -88,7 +88,7 @@
       <!-- 탭 메뉴 -->
       <div class="diff-tabs">
         <button class="tab-btn active" data-tab="enhanced">전체 출력</button>
-        <button class="tab-btn" data-tab="original">변경 된 부분만 출력</button>
+        <button class="tab-btn" data-tab="only-diff">변경된 부분만 출력</button>
         <button class="tab-btn" data-tab="flattened">요약</button>
       </div>
       
@@ -99,9 +99,9 @@
         </div>
       </div>
       
-      <div class="tab-content" id="tab-original">
-        <div class="code-wrap" id="capture-area-original">
-          <pre><code class="language-diff" id="code-diff-original"></code></pre>
+      <div class="tab-content" id="tab-only-diff">
+        <div class="code-wrap" id="capture-area-only-diff">
+          <pre><code class="language-diff" id="code-diff-only-diff"></code></pre>
         </div>
       </div>
       
@@ -150,7 +150,6 @@
 
   <script defer src="./js/visitor-counter.js"></script>
   <!-- Core (diff 로직) 먼저 로드 -->
-  <script defer src="./js/dependency-diff.js"></script>
   <script defer src="./js/dependency-only-diff.js"></script>
   <script defer src="./js/dependency-diff-tree-full-enhanced.js"></script>
   <!-- UI -->

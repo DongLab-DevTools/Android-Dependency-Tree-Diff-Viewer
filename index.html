@@ -7,6 +7,8 @@
   <title>Dependency Tree Diff</title>
 
   <script src="https://cdn.jsdelivr.net/npm/counterapi/dist/counter.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dom-to-image-more@3.4.0/dist/dom-to-image-more.min.js"></script>
 
   <!-- Prism -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
@@ -21,7 +23,7 @@
   <main class="container">
 
     <header class="header">
-          
+
       <!-- 방문자 카운터 (오른쪽 상단) -->
       <div class="view-counter" aria-label="페이지 방문자 수">
         <span class="counter-label">Total</span>
@@ -29,7 +31,7 @@
       </div>
 
       <br>
-      
+
       <h1>Dependency Tree Diff</h1>
       <p>Android 의존성 그래프 변경사항을 쉽게 비교해보세요</p>
 
@@ -76,9 +78,12 @@
     <section class="card result" id="result-card" style="display:none">
       <div class="result-header">
         <h2 class="result-title">비교 결과</h2>
-        <button class="btn btn-secondary" id="btn-copy" type="button">결과 복사</button>
+        <div class="result-actions">
+          <button class="btn btn-secondary" id="btn-copy" type="button">결과 복사</button>
+          <button class="btn btn-secondary" id="btn-screenshot" type="button">스크린샷 저장</button>
+        </div>
       </div>
-      <div class="code-wrap">
+      <div class="code-wrap" id="capture-area">
         <pre><code class="language-diff" id="code-diff"></code></pre>
       </div>
     </section>
@@ -124,6 +129,8 @@
   <script defer src="./dependency-diff.js"></script>
   <!-- UI -->
   <script defer src="./app.js"></script>
+
+  <script defer src="./result-capture.js"></script>
 </body>
 
 </html>

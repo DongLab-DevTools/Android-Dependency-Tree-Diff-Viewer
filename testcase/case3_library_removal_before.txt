@@ -1,0 +1,4 @@
++--- org.jetbrains.kotlin:kotlin-stdlib:1.9.0
+|    +--- org.jetbrains:annotations:13.0
++--- com.squareup.moshi:moshi:1.14.0
+\--- project :feature

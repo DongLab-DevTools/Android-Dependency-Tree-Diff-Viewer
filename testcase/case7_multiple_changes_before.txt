@@ -1,0 +1,5 @@
++--- com.squareup.retrofit2:retrofit:2.8.0
+|    \--- com.squareup.okhttp3:okhttp:4.7.2
++--- org.apache.commons:commons-lang3:3.10
++--- org.jetbrains.kotlin:kotlin-stdlib:1.8.20
+\--- project :ui

@@ -1,0 +1,5 @@
++--- com.google.guava:guava:32.0.0-jre
+|    +--- com.google.code.findbugs:jsr305:3.0.2
+|    \--- com.google.errorprone:error_prone_annotations:2.3.4
++--- org.jetbrains:annotations:13.0
+\--- project :core

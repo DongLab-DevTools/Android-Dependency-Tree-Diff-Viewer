@@ -1,0 +1,2 @@
++--- com.squareup.moshi:moshi:1.14.0
+\--- project :feature

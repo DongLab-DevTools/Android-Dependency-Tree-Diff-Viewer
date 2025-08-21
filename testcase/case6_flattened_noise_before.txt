@@ -1,0 +1,4 @@
++--- com.squareup.okio:okio
++--- com.squareup.okio:okio:3.5.0
++--- com.google.guava:guava:32.0.0-jre
+\--- project :core

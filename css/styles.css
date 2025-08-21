@@ -134,6 +134,25 @@ code.language-diff .token.inserted {
   padding: 1px 8px 1px 6px;
   border-radius: 6px;
 }
+
+/* 내부 토큰들의 중복 border 제거 */
+code.language-diff .token.inserted .token.line,
+code.language-diff .token.deleted .token.line {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline !important;
+}
+
+/* prefix는 원래 스타일 유지하되 중복 border만 제거 */
+code.language-diff .token.inserted .token.prefix,
+code.language-diff .token.deleted .token.prefix {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
 code.language-diff .token.unchanged,
 code.language-diff .token.diff {
   display: block;
@@ -153,6 +172,25 @@ code.language-diff { letter-spacing: 0; }
   }
   code.language-diff .token.inserted {
     color: #86efac; background: rgba(16, 185, 129, 0.12); border-left-color: #10b981;
+  }
+  
+  /* 다크 모드에서도 내부 토큰들의 중복 border 제거 */
+  code.language-diff .token.inserted .token.line,
+  code.language-diff .token.deleted .token.line {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline !important;
+  }
+  
+  /* 다크 모드에서 prefix 중복 border만 제거 */
+  code.language-diff .token.inserted .token.prefix,
+  code.language-diff .token.deleted .token.prefix {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
   code.language-diff .token.unchanged,
   code.language-diff .token.diff { color: #d1d5db; }

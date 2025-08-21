@@ -373,7 +373,7 @@ code.language-diff { letter-spacing: 0; }
 .tab-btn {
   appearance: none;
   border: none;
-  background: var(--neutral-50);
+  background: transparent;
   color: var(--neutral-600);
   padding: 12px 20px;
   font-size: 14px;

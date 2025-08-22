@@ -379,20 +379,20 @@ btnScreenshotApp?.addEventListener("click", async () => {
     // 현재 활성화된 탭의 캡쳐 영역 선택
     const activeTab = document.querySelector('.tab-content.active');
     if (!activeTab) {
-      alert('활성화된 탭이 없습니다.');
+      alert('현재 선택된 탭을 찾을 수 없습니다.');
       return;
     }
     
     const activeCaptureArea = activeTab.querySelector('.code-wrap');
     if (!activeCaptureArea) {
-      alert('캡쳐할 영역을 찾을 수 없습니다.');
+      alert('스크린샷을 찍을 영역을 찾을 수 없습니다.');
       return;
     }
     
     // 내용이 있는지 확인
     const codeElement = activeCaptureArea.querySelector('code');
     if (!codeElement || !codeElement.textContent.trim()) {
-      alert('캡쳐할 내용이 없습니다. 먼저 파일을 업로드하고 비교해주세요.');
+      alert('비교 결과가 없습니다. 먼저 파일을 업로드하고 비교해주세요.');
       return;
     }
     
@@ -402,36 +402,168 @@ btnScreenshotApp?.addEventListener("click", async () => {
     
     const activeTabName = activeTab.id.replace('tab-', '');
     
-    // 새로운 접근: 깨끗한 캔버스 직접 생성
-    console.log('수동으로 캔버스 생성 시도');
+    // dom-to-image 라이브러리 시도
+    if (typeof window.domtoimage !== 'undefined') {
+      console.log('dom-to-image 사용');
+      try {
+        const dataUrl = await window.domtoimage.toPng(activeCaptureArea, {
+          bgcolor: '#ffffff',
+          quality: 1,
+          cacheBust: true,
+          style: {
+            transform: 'scale(1)',
+            transformOrigin: 'top left'
+          }
+        });
+        
+        console.log('domtoimage DataURL 길이:', dataUrl.length);
+        
+        if (dataUrl.length > 100) {
+          // 날짜/시간 헤더를 추가한 최종 캔버스 생성
+          const img = new Image();
+          img.onload = () => {
+            const finalCanvas = document.createElement('canvas');
+            const ctx = finalCanvas.getContext('2d');
+            
+            const headerHeight = 60;
+            finalCanvas.width = img.width;
+            finalCanvas.height = img.height + headerHeight;
+            
+            // 배경 그리기
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            
+            // 헤더 텍스트 그리기
+            const now = new Date();
+            const dateString = now.toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              weekday: 'long'
+            });
+            const timeString = now.toLocaleTimeString('ko-KR', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            });
+            
+            ctx.fillStyle = '#6b7684';
+            ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Android Dependency Tree Diff Viewer', finalCanvas.width / 2, 25);
+            ctx.fillText(`${dateString} ${timeString}`, finalCanvas.width / 2, 45);
+            
+            // 원본 이미지 그리기
+            ctx.drawImage(img, 0, headerHeight);
+            
+            const finalDataUrl = finalCanvas.toDataURL("image/png");
+            const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}-${String(now.getSeconds()).padStart(2,'0')}`;
+            const filename = `dependency-diff-${activeTabName}-${dateStr}.png`;
+            
+            downloadDataUrl(finalDataUrl, filename);
+            console.log('dom-to-image로 다운로드 완료');
+          };
+          img.src = dataUrl;
+          return;
+        }
+      } catch (e) {
+        console.warn('dom-to-image 실패:', e);
+      }
+    }
     
-    // 텍스트 내용 가져오기
+    // html2canvas 재시도 (taint 방지 옵션)
+    if (typeof html2canvas === 'function') {
+      console.log('html2canvas 재시도');
+      try {
+        const canvas = await html2canvas(activeCaptureArea, {
+          backgroundColor: "#ffffff",
+          scale: 1,
+          useCORS: false,
+          allowTaint: false,
+          logging: false,
+          ignoreElements: (element) => {
+            // 외부 이미지나 iframe 등 제외
+            return element.tagName === 'IMG' || element.tagName === 'IFRAME';
+          }
+        });
+        
+        console.log('html2canvas 재시도 캔버스:', canvas.width, 'x', canvas.height);
+        
+        // 새로운 캔버스에 헤더와 함께 그리기
+        const finalCanvas = document.createElement('canvas');
+        const ctx = finalCanvas.getContext('2d');
+        
+        const headerHeight = 60;
+        finalCanvas.width = canvas.width;
+        finalCanvas.height = canvas.height + headerHeight;
+        
+        // 배경 그리기
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+        
+        // 헤더 텍스트 그리기
+        const now = new Date();
+        const dateString = now.toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          weekday: 'long'
+        });
+        const timeString = now.toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        
+        ctx.fillStyle = '#6b7684';
+        ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Android Dependency Tree Diff Viewer', finalCanvas.width / 2, 25);
+        ctx.fillText(`${dateString} ${timeString}`, finalCanvas.width / 2, 45);
+        
+        // 원본 캔버스 그리기
+        ctx.drawImage(canvas, 0, headerHeight);
+        
+        const dataUrl = finalCanvas.toDataURL("image/png");
+        console.log('html2canvas 재시도 DataURL 길이:', dataUrl.length);
+        
+        if (dataUrl.length > 100) {
+          const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}-${String(now.getSeconds()).padStart(2,'0')}`;
+          const filename = `dependency-diff-${activeTabName}-${dateStr}.png`;
+          
+          downloadDataUrl(dataUrl, filename);
+          console.log('html2canvas 재시도로 다운로드 완료');
+          return;
+        }
+      } catch (e) {
+        console.warn('html2canvas 재시도 실패:', e);
+      }
+    }
+    
+    // 최후 수단: 텍스트 기반 캔버스
+    console.log('최후 수단: 텍스트 기반 캔버스');
+    alert('파일이 너무 커서 캡쳐가 불가합니다. 텍스트 기반으로 생성하겠습니다.');
+    
+    // 기존 텍스트 기반 로직...
     const textContent = codeElement.textContent;
     const lines = textContent.split('\n');
     
-    // 캔버스 생성
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
-    // 폰트 설정
     const fontSize = 12;
     const lineHeight = fontSize * 1.4;
     const padding = 20;
     
     ctx.font = `${fontSize}px 'Monaco', 'Menlo', 'Ubuntu Mono', monospace`;
     
-    // 캔버스 크기 계산
     const maxLineWidth = Math.max(...lines.map(line => ctx.measureText(line).width));
     canvas.width = maxLineWidth + (padding * 2);
-    canvas.height = (lines.length * lineHeight) + (padding * 2) + 60; // 헤더 공간
+    canvas.height = (lines.length * lineHeight) + (padding * 2) + 60;
     
-    console.log('수동 캔버스 크기:', canvas.width, 'x', canvas.height);
-    
-    // 배경 그리기
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // 헤더 그리기
     const now = new Date();
     const dateString = now.toLocaleDateString('ko-KR', {
       year: 'numeric',
@@ -451,7 +583,6 @@ btnScreenshotApp?.addEventListener("click", async () => {
     ctx.fillText('Android Dependency Tree Diff Viewer', canvas.width / 2, 25);
     ctx.fillText(`${dateString} ${timeString}`, canvas.width / 2, 45);
     
-    // 텍스트 그리기
     ctx.fillStyle = '#000000';
     ctx.font = `${fontSize}px 'Monaco', 'Menlo', 'Ubuntu Mono', monospace`;
     ctx.textAlign = 'left';
@@ -459,37 +590,27 @@ btnScreenshotApp?.addEventListener("click", async () => {
     lines.forEach((line, index) => {
       const y = 70 + (index * lineHeight);
       
-      // diff 라인 색상 처리
       if (line.startsWith('+')) {
-        ctx.fillStyle = '#22863a'; // 녹색
+        ctx.fillStyle = '#22863a';
       } else if (line.startsWith('-')) {
-        ctx.fillStyle = '#d73a49'; // 빨간색
+        ctx.fillStyle = '#d73a49';
       } else if (line.startsWith('@')) {
-        ctx.fillStyle = '#6f42c1'; // 보라색
+        ctx.fillStyle = '#6f42c1';
       } else {
-        ctx.fillStyle = '#24292e'; // 기본 검정색
+        ctx.fillStyle = '#24292e';
       }
       
       ctx.fillText(line, padding, y);
     });
     
-    // 데이터URL 생성
     const dataUrl = canvas.toDataURL("image/png");
-    console.log('수동 생성 DataURL 길이:', dataUrl.length);
-    console.log('수동 생성 DataURL 시작:', dataUrl.substring(0, 50));
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}-${String(now.getSeconds()).padStart(2,'0')}`;
+    const filename = `dependency-diff-${activeTabName}-${dateStr}.png`;
     
-    if (dataUrl.length > 100) {
-      const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}-${String(now.getSeconds()).padStart(2,'0')}`;
-      const filename = `dependency-diff-${activeTabName}-${dateStr}.png`;
-      
-      downloadDataUrl(dataUrl, filename);
-      console.log('수동 생성 캔버스로 다운로드 완료');
-    } else {
-      alert('수동 캔버스 생성에도 실패했습니다.');
-    }
+    downloadDataUrl(dataUrl, filename);
   } catch (error) {
     console.error("스크린샷 오류:", error);
-    alert("스크린샷 생성에 실패했습니다: " + error.message);
+    alert("스크린샷 생성 중 문제가 발생했습니다. 다시 시도해주세요.");
   }
 });
 

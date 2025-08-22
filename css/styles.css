@@ -336,6 +336,32 @@ code.language-diff { letter-spacing: 0; }
   color: var(--neutral-600);
 }
 
+.config-info {
+  margin: 12px 0 0 0;
+  padding: 0;
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+.config-info li {
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--neutral-600);
+  line-height: 1.4;
+}
+
+.config-info li:last-child {
+  margin-bottom: 0;
+}
+
+.config-info code {
+  background: var(--neutral-200);
+  color: var(--neutral-800);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
 .header {
   position: relative;
   text-align: center;   /* 가운데 정렬 */

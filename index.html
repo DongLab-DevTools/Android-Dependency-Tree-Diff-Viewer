@@ -134,8 +134,13 @@
             <div class="guide-block">
               <div class="guide-label">명령어</div>
               <pre
-                class="guide-code"><code>./gradlew app:dependencies --configuration {BuildVariant명}CompileClassPath > before.txt</code></pre>
+                class="guide-code"><code>./gradlew app:dependencies --configuration {BuildVariant명}RuntimeClassPath > before.txt</code></pre>
             </div>
+            <ul class="config-info">
+              <li><strong>RuntimeClassPath</strong>: 실제 앱 실행 시 필요한 의존성 (APK에 포함되는 라이브러리들)</li>
+              <li><strong>CompileClassPath</strong>: 컴파일 시에만 필요한 의존성 (API, annotation processor 등)</li>
+              <li>💡 APK 크기나 실제 앱 의존성 확인 시 <code>RuntimeClassPath</code> 권장</li>
+            </ul>
           </li>
 
           <li class="guide-step">
@@ -144,7 +149,7 @@
             <div class="guide-block">
               <div class="guide-label">명령어</div>
               <pre
-                class="guide-code"><code>./gradlew app:dependencies --configuration {BuildVariant명}CompileClassPath > after.txt</code></pre>
+                class="guide-code"><code>./gradlew app:dependencies --configuration {BuildVariant명}RuntimeClassPath > after.txt</code></pre>
             </div>
           </li>
 

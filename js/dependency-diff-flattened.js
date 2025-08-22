@@ -13,8 +13,9 @@ function dependencyTreeDiffFlattened(oldStr, newStr){
   const newMap = buildResolvedMapFlattened(newStr);
   const diff = diffMapsFlattened(oldMap, newMap);
 
-  // 2) 새로운 모듈의 하위 의존성들도 추가 (트리 구조 유지)
-  const additionalDepsTree = findModuleDependenciesWithStructure(oldStr, newStr, diff);
+  // 2) 새로운 모듈의 하위 의존성들도 추가하되,
+  //    "전체 이전 그래프에 없던 좌표"만 추가
+  const additionalDepsTree = findModuleDependenciesWithStructure(oldStr, newStr, diff, oldMap);
   
   return formatReportFlattenedWithTree(diff, additionalDepsTree);
 }
@@ -136,26 +137,21 @@ function formatReportFlattened({ added, removed, changed }){
 }
 
 // 새로운 모듈의 하위 의존성 찾기 (트리 구조 유지)
-function findModuleDependenciesWithStructure(oldStr, newStr, diff) {
+// oldMap을 받아서 "전역적으로 신규"만 Added 확장
+function findModuleDependenciesWithStructure(oldStr, newStr, diff, oldMap) {
   const modulesTrees = [];
-  
-  // Added에서 project 모듈들만 찾기
-  const addedModules = diff.added.filter(item => 
-    item.version === "(project)" && item.key.startsWith("project :")
+  const addedModules = diff.added.filter(
+    item => item.version === "(project)" && item.key.startsWith("project :")
   );
-  
   if (addedModules.length === 0) return modulesTrees;
-  
-  // NEW 텍스트에서 각 모듈의 하위 의존성들 찾기
+
   const newLines = newStr.split(/\r?\n/);
-  
+
   for (const module of addedModules) {
-    const moduleName = module.key; // "project :trost:feature:soundplayer"
-    
-    // 모듈 라인 찾기
+    const moduleName = module.key;
     let moduleLineIndex = -1;
     let moduleDepth = -1;
-    
+
     for (let i = 0; i < newLines.length; i++) {
       const line = newLines[i];
       if (line.includes("--- " + moduleName)) {
@@ -165,48 +161,41 @@ function findModuleDependenciesWithStructure(oldStr, newStr, diff) {
         break;
       }
     }
-    
     if (moduleLineIndex === -1) continue;
-    
-    const moduleTree = {
-      moduleName: moduleName,
-      dependencies: []
-    };
-    
-    // 모듈 하위의 의존성들 수집 (원본 라인 그대로)
+
+    const moduleTree = { moduleName, dependencies: [] };
+
     for (let i = moduleLineIndex + 1; i < newLines.length; i++) {
       const line = newLines[i];
       const idx = line.indexOf("--- ");
-      
-      if (idx < 0) continue; // 의존성 라인이 아님
-      
+      if (idx < 0) continue;
+
       const currentDepth = Math.floor(idx / 5);
-      
-      // 모듈보다 깊이가 깊지 않으면 모듈 범위 벗어남
       if (currentDepth <= moduleDepth) break;
-      
-      // 의존성 라인을 그대로 저장 (들여쓰기 포함)
+
       const parsed = parseLineToCoordinateFlattened(line);
-      
-      if (parsed && parsed.key && !parsed.key.startsWith("project :")) {
-        // 중복 체크 (이미 Added에 있는지)
-        const isDuplicate = diff.added.some(existing => existing.key === parsed.key);
-        if (!isDuplicate) {
-          moduleTree.dependencies.push({
-            originalLine: line,
-            key: parsed.key,
-            version: parsed.resolved,
-            depth: currentDepth - moduleDepth // 모듈로부터의 상대적 깊이
-          });
-        }
+      if (!parsed || !parsed.key || parsed.key.startsWith("project :")) continue;
+
+      // ✅ 핵심 필터:
+      // - 전역 before(=oldMap)에 없던 좌표만 추가
+      // - 이미 diff.added에 들어간 좌표는 중복 방지
+      const globallyNew = !Object.prototype.hasOwnProperty.call(oldMap, parsed.key);
+      const alreadyInAdded = diff.added.some(existing => existing.key === parsed.key);
+
+      if (globallyNew && !alreadyInAdded) {
+        moduleTree.dependencies.push({
+          originalLine: line,
+          key: parsed.key,
+          version: parsed.resolved,
+          depth: currentDepth - moduleDepth
+        });
       }
     }
-    
+
     if (moduleTree.dependencies.length > 0) {
       modulesTrees.push(moduleTree);
     }
   }
-  
   return modulesTrees;
 }
 

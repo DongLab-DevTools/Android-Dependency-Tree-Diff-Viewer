@@ -402,3 +402,27 @@ code.language-diff { letter-spacing: 0; }
 .tab-content.active {
   display: block;
 }
+
+.tab-description {
+  background: var(--neutral-100);
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.tab-description p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--neutral-700);
+  line-height: 1.5;
+}
+
+.tab-description code {
+  background: var(--neutral-200);
+  color: var(--neutral-800);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}

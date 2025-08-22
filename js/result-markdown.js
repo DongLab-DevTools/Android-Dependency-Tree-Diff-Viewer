@@ -1,8 +1,7 @@
 // js/result-markdown-download.js
 (function () {
     const btn = document.getElementById('btn-md-download');
-    const codeEl = document.getElementById('code-diff');
-    if (!btn || !codeEl) return;
+    if (!btn) return;
 
     const nameOldEl = document.getElementById('name-old');
     const nameNewEl = document.getElementById('name-new');
@@ -62,6 +61,15 @@
     }
 
     btn.addEventListener('click', () => {
+        // 현재 활성화된 탭의 코드 영역 찾기
+        const activeTab = document.querySelector('.tab-content.active');
+        const codeEl = activeTab ? activeTab.querySelector('code') : null;
+        
+        if (!codeEl) {
+            flash(btn, '활성 탭을 찾을 수 없어요');
+            return;
+        }
+        
         const raw = codeEl.textContent || '';
         if (!raw.trim()) {
             flash(btn, '내용이 없어요');

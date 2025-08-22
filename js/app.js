@@ -260,6 +260,62 @@ async function captureWithHtml2Canvas(el) {
     throw new Error("html2canvas not loaded");
   }
 
+  console.log('캡쳐 대상 요소:', el);
+  console.log('요소 내용:', el.textContent?.slice(0, 100));
+
+  const canvas = await html2canvas(el, {
+    backgroundColor: "#ffffff",
+    scale: 2, // 고해상도
+    useCORS: true,
+    logging: true,
+    allowTaint: false,
+    height: el.scrollHeight,
+    width: el.scrollWidth
+  });
+
+  console.log('캔버스 크기:', canvas.width, 'x', canvas.height);
+  
+  // 날짜/시간 헤더를 캔버스에 직접 그리기
+  const finalCanvas = document.createElement('canvas');
+  const ctx = finalCanvas.getContext('2d');
+  
+  const headerHeight = 80;
+  finalCanvas.width = canvas.width;
+  finalCanvas.height = canvas.height + headerHeight;
+  
+  // 배경 그리기
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+  
+  // 헤더 텍스트 그리기
+  const now = new Date();
+  const dateString = now.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit', 
+    day: '2-digit',
+    weekday: 'long'
+  });
+  const timeString = now.toLocaleTimeString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+  
+  ctx.fillStyle = '#6b7684';
+  ctx.font = '28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Android Dependency Tree Diff Viewer', finalCanvas.width / 2, 35);
+  ctx.fillText(`${dateString} ${timeString}`, finalCanvas.width / 2, 65);
+  
+  // 원본 캔버스 그리기
+  ctx.drawImage(canvas, 0, headerHeight);
+
+  return finalCanvas.toDataURL("image/png");
+}
+
+async function captureWithDomToImage(el) {
+  await new Promise(requestAnimationFrame);
+  
   // 캡쳐 영역을 감싸는 컨테이너 생성
   const captureContainer = document.createElement('div');
   captureContainer.style.cssText = `
@@ -301,23 +357,8 @@ async function captureWithHtml2Canvas(el) {
   captureContainer.style.left = '-9999px';
   document.body.appendChild(captureContainer);
 
-  const canvas = await html2canvas(captureContainer, {
-    backgroundColor: "#ffffff",
-    scale: window.devicePixelRatio > 1 ? 2 : 1, // 고해상도
-    useCORS: true,
-    logging: false
-  });
-
-  // 임시 요소 제거
-  document.body.removeChild(captureContainer);
-
-  return canvas.toDataURL("image/png");
-}
-
-async function captureWithDomToImage(el) {
-  await new Promise(requestAnimationFrame);
-  const dataUrl = await window.domtoimage.toPng(el, {
-    bgcolor: window.matchMedia("(prefers-color-scheme: dark)").matches ? "#111827" : "#ffffff",
+  const dataUrl = await window.domtoimage.toPng(captureContainer, {
+    bgcolor: "#ffffff",
     quality: 1,
     cacheBust: true,
     style: {
@@ -326,6 +367,10 @@ async function captureWithDomToImage(el) {
       animation: "none"
     }
   });
+
+  // 임시 요소 제거
+  document.body.removeChild(captureContainer);
+
   return dataUrl;
 }
 
@@ -333,34 +378,118 @@ btnScreenshotApp?.addEventListener("click", async () => {
   try {
     // 현재 활성화된 탭의 캡쳐 영역 선택
     const activeTab = document.querySelector('.tab-content.active');
+    if (!activeTab) {
+      alert('활성화된 탭이 없습니다.');
+      return;
+    }
+    
     const activeCaptureArea = activeTab.querySelector('.code-wrap');
+    if (!activeCaptureArea) {
+      alert('캡쳐할 영역을 찾을 수 없습니다.');
+      return;
+    }
+    
+    // 내용이 있는지 확인
+    const codeElement = activeCaptureArea.querySelector('code');
+    if (!codeElement || !codeElement.textContent.trim()) {
+      alert('캡쳐할 내용이 없습니다. 먼저 파일을 업로드하고 비교해주세요.');
+      return;
+    }
+    
+    console.log('캡쳐 시작...');
+    console.log('캡쳐 영역:', activeCaptureArea);
+    console.log('코드 내용 길이:', codeElement.textContent.length);
+    
     const activeTabName = activeTab.id.replace('tab-', '');
     
-    // 우선 html2canvas 시도
-    const dataUrl = await captureWithHtml2Canvas(activeCaptureArea);
+    // 새로운 접근: 깨끗한 캔버스 직접 생성
+    console.log('수동으로 캔버스 생성 시도');
     
-    // 파일명에 날짜/시간 포함
+    // 텍스트 내용 가져오기
+    const textContent = codeElement.textContent;
+    const lines = textContent.split('\n');
+    
+    // 캔버스 생성
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // 폰트 설정
+    const fontSize = 12;
+    const lineHeight = fontSize * 1.4;
+    const padding = 20;
+    
+    ctx.font = `${fontSize}px 'Monaco', 'Menlo', 'Ubuntu Mono', monospace`;
+    
+    // 캔버스 크기 계산
+    const maxLineWidth = Math.max(...lines.map(line => ctx.measureText(line).width));
+    canvas.width = maxLineWidth + (padding * 2);
+    canvas.height = (lines.length * lineHeight) + (padding * 2) + 60; // 헤더 공간
+    
+    console.log('수동 캔버스 크기:', canvas.width, 'x', canvas.height);
+    
+    // 배경 그리기
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // 헤더 그리기
     const now = new Date();
-    const filename = `dependency-diff-${activeTabName}-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.png`;
+    const dateString = now.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      weekday: 'long'
+    });
+    const timeString = now.toLocaleTimeString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
     
-    downloadDataUrl(dataUrl, filename);
-  } catch (e1) {
-    console.warn("html2canvas 실패, dom-to-image-more로 폴백:", e1);
-    try {
-      const activeTab = document.querySelector('.tab-content.active');
-      const activeCaptureArea = activeTab.querySelector('.code-wrap');
-      const activeTabName = activeTab.id.replace('tab-', '');
+    ctx.fillStyle = '#6b7684';
+    ctx.font = `14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('Android Dependency Tree Diff Viewer', canvas.width / 2, 25);
+    ctx.fillText(`${dateString} ${timeString}`, canvas.width / 2, 45);
+    
+    // 텍스트 그리기
+    ctx.fillStyle = '#000000';
+    ctx.font = `${fontSize}px 'Monaco', 'Menlo', 'Ubuntu Mono', monospace`;
+    ctx.textAlign = 'left';
+    
+    lines.forEach((line, index) => {
+      const y = 70 + (index * lineHeight);
       
-      const dataUrl = await captureWithDomToImage(activeCaptureArea);
-      // 파일명에 날짜/시간 포함
-      const now = new Date();
-      const filename = `dependency-diff-${activeTabName}-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.png`;
+      // diff 라인 색상 처리
+      if (line.startsWith('+')) {
+        ctx.fillStyle = '#22863a'; // 녹색
+      } else if (line.startsWith('-')) {
+        ctx.fillStyle = '#d73a49'; // 빨간색
+      } else if (line.startsWith('@')) {
+        ctx.fillStyle = '#6f42c1'; // 보라색
+      } else {
+        ctx.fillStyle = '#24292e'; // 기본 검정색
+      }
+      
+      ctx.fillText(line, padding, y);
+    });
+    
+    // 데이터URL 생성
+    const dataUrl = canvas.toDataURL("image/png");
+    console.log('수동 생성 DataURL 길이:', dataUrl.length);
+    console.log('수동 생성 DataURL 시작:', dataUrl.substring(0, 50));
+    
+    if (dataUrl.length > 100) {
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}-${String(now.getSeconds()).padStart(2,'0')}`;
+      const filename = `dependency-diff-${activeTabName}-${dateStr}.png`;
       
       downloadDataUrl(dataUrl, filename);
-    } catch (e2) {
-      console.error("스크린샷 생성 실패:", e2);
-      setError("스크린샷 생성에 실패했습니다. 브라우저를 새로고침 후 다시 시도해 주세요.");
+      console.log('수동 생성 캔버스로 다운로드 완료');
+    } else {
+      alert('수동 캔버스 생성에도 실패했습니다.');
     }
+  } catch (error) {
+    console.error("스크린샷 오류:", error);
+    alert("스크린샷 생성에 실패했습니다: " + error.message);
   }
 });
 

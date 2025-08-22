@@ -88,47 +88,4 @@ async function captureWithDomToImage(el) {
   return dataUrl;
 }
 
-btnScreenshotCapture?.addEventListener("click", async () => {
-  try {
-    // 현재 활성화된 탭의 캡쳐 영역 선택
-    const activeTab = document.querySelector('.tab-content.active');
-    if (!activeTab) {
-      alert('활성화된 탭이 없습니다.');
-      return;
-    }
-    
-    const captureArea = activeTab.querySelector('.code-wrap');
-    if (!captureArea) {
-      alert('캡쳐할 영역을 찾을 수 없습니다.');
-      return;
-    }
-    
-    // 우선 html2canvas 시도
-    const dataUrl = await captureWithHtml2Canvas(captureArea);
-    
-    // 파일명에 날짜/시간 포함
-    const now = new Date();
-    const activeTabName = activeTab.id.replace('tab-', '');
-    const filename = `dependency-diff-${activeTabName}-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.png`;
-    
-    downloadDataUrl(dataUrl, filename);
-  } catch (e1) {
-    console.warn("html2canvas 실패, dom-to-image-more로 폴백:", e1);
-    try {
-      const activeTab = document.querySelector('.tab-content.active');
-      const captureArea = activeTab.querySelector('.code-wrap');
-      
-      const dataUrl = await captureWithDomToImage(captureArea);
-      
-      // 파일명에 날짜/시간 포함
-      const now = new Date();
-      const activeTabName = activeTab.id.replace('tab-', '');
-      const filename = `dependency-diff-${activeTabName}-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.png`;
-      
-      downloadDataUrl(dataUrl, filename);
-    } catch (e2) {
-      console.error("스크린샷 생성 실패:", e2);
-      alert("스크린샷 생성에 실패했습니다. 브라우저를 새로고침 후 다시 시도해 주세요.");
-    }
-  }
-});
+// 이벤트 리스너는 app.js에서 처리하므로 제거

@@ -60,28 +60,63 @@
     }
 
     btn.addEventListener('click', () => {
-        // 현재 활성화된 탭의 코드 영역 찾기
-        const activeTab = document.querySelector('.tab-content.active');
-        const codeEl = activeTab ? activeTab.querySelector('code') : null;
+        // 즉시 로딩 표시
+        const spinner = document.getElementById('spinner-md');
+        const btnText = document.getElementById('btn-md-text');
+        const originalBtnText = btnText.textContent;
         
-        if (!codeEl) {
-            flash(btn, '활성 탭을 찾을 수 없어요');
-            return;
-        }
+        spinner.style.display = "inline-block";
+        btn.disabled = true;
+        btnText.textContent = "생성 중...";
         
-        const raw = codeEl.textContent || '';
-        if (!raw.trim()) {
-            flash(btn, '내용이 없어요');
-            return;
-        }
-        const md = buildMarkdown(raw);
-        const fname = `dependency-diff-${nowStamp()}.md`;
-        try {
-            download(fname, md);
-            flash(btn, '다운로드 완료!');
-        } catch (e) {
-            console.error(e);
-            flash(btn, '다운로드 실패');
-        }
+        // UI 업데이트를 위한 지연 후 처리
+        setTimeout(() => {
+            try {
+                // 현재 활성화된 탭의 코드 영역 찾기
+                const activeTab = document.querySelector('.tab-content.active');
+                const codeEl = activeTab ? activeTab.querySelector('code') : null;
+                
+                if (!codeEl) {
+                    // 로딩 해제
+                    spinner.style.display = "none";
+                    btn.disabled = false;
+                    btnText.textContent = originalBtnText;
+                    
+                    flash(btn, '활성 탭을 찾을 수 없어요');
+                    return;
+                }
+                
+                const raw = codeEl.textContent || '';
+                if (!raw.trim()) {
+                    // 로딩 해제
+                    spinner.style.display = "none";
+                    btn.disabled = false;
+                    btnText.textContent = originalBtnText;
+                    
+                    flash(btn, '내용이 없어요');
+                    return;
+                }
+                
+                const md = buildMarkdown(raw);
+                const fname = `dependency-diff-${nowStamp()}.md`;
+                download(fname, md);
+                
+                // 로딩 해제
+                spinner.style.display = "none";
+                btn.disabled = false;
+                btnText.textContent = originalBtnText;
+                
+                flash(btn, '다운로드 완료!');
+            } catch (e) {
+                console.error(e);
+                
+                // 로딩 해제
+                spinner.style.display = "none";
+                btn.disabled = false;
+                btnText.textContent = originalBtnText;
+                
+                flash(btn, '다운로드 실패');
+            }
+        }, 50);
     });
 })();

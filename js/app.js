@@ -375,7 +375,20 @@ async function captureWithDomToImage(el) {
 }
 
 btnScreenshotApp?.addEventListener("click", async () => {
+  // 즉시 로딩 표시
+  const spinner = document.getElementById('spinner-screenshot');
+  const btnScreenshot = document.getElementById('btn-screenshot');
+  const btnText = document.getElementById('btn-screenshot-text');
+  const originalBtnText = btnText.textContent;
+  
+  spinner.style.display = "inline-block";
+  btnScreenshot.disabled = true;
+  btnText.textContent = "생성 중...";
+
   try {
+    // UI 업데이트를 위한 약간의 지연
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
     // 현재 활성화된 탭의 캡쳐 영역 선택
     const activeTab = document.querySelector('.tab-content.active');
     if (!activeTab) {
@@ -462,6 +475,11 @@ btnScreenshotApp?.addEventListener("click", async () => {
             
             downloadDataUrl(finalDataUrl, filename);
             console.log('dom-to-image로 다운로드 완료');
+            
+            // 로딩 해제
+            spinner.style.display = "none";
+            btnScreenshot.disabled = false;
+            btnText.textContent = originalBtnText;
           };
           img.src = dataUrl;
           return;
@@ -533,6 +551,11 @@ btnScreenshotApp?.addEventListener("click", async () => {
           
           downloadDataUrl(dataUrl, filename);
           console.log('html2canvas 재시도로 다운로드 완료');
+          
+          // 로딩 해제
+          spinner.style.display = "none";
+          btnScreenshot.disabled = false;
+          btnText.textContent = originalBtnText;
           return;
         }
       } catch (e) {
@@ -608,9 +631,19 @@ btnScreenshotApp?.addEventListener("click", async () => {
     const filename = `dependency-diff-${activeTabName}-${dateStr}.png`;
     
     downloadDataUrl(dataUrl, filename);
+    
+    // 로딩 해제
+    spinner.style.display = "none";
+    btnScreenshot.disabled = false;
+    btnText.textContent = originalBtnText;
   } catch (error) {
     console.error("스크린샷 오류:", error);
     alert("스크린샷 생성 중 문제가 발생했습니다. 다시 시도해주세요.");
+    
+    // 로딩 해제 (오류 시에도)
+    spinner.style.display = "none";
+    btnScreenshot.disabled = false;
+    btnText.textContent = originalBtnText;
   }
 });
 

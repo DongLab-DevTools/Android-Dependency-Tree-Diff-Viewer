@@ -80,8 +80,14 @@
         <h2 class="result-title">비교 결과</h2>
         <div class="result-actions">
           <button class="btn btn-secondary" id="btn-copy" type="button">결과 복사</button>
-          <button class="btn btn-secondary" id="btn-screenshot" type="button">스크린샷 저장</button>
-          <button class="btn btn-secondary" id="btn-md-download" type="button">마크다운으로 저장</button>
+          <button class="btn btn-secondary" id="btn-screenshot" type="button">
+            <span id="btn-screenshot-text">스크린샷 저장</span>
+            <span id="spinner-screenshot" class="spinner" style="display:none"></span>
+          </button>
+          <button class="btn btn-secondary" id="btn-md-download" type="button">
+            <span id="btn-md-text">마크다운으로 저장</span>
+            <span id="spinner-md" class="spinner" style="display:none"></span>
+          </button>
         </div>
       </div>
       

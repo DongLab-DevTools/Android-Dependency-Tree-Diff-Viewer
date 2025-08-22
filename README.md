@@ -4,33 +4,32 @@ Android 프로젝트의 의존성 그래프 변경사항을 쉽게 비교할 수
 
 Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과 그 경로를 시각적으로 표시합니다.
 
-## 의존성 변경 표시 방식
+## 출력 방식
 
-이 도구는 일반적인 diff와 달리, **변경된 의존성의 루트 경로까지 모두 표시**합니다.
+3가지 출력 방식을 제공합니다:
+
+### 1. 전체 출력
+일반적인 파일 diff처럼 모든 내용을 보여줍니다.
+
+### 2. 변경된 부분만 출력
+추가되거나 삭제된 의존성만 표시합니다.
 
 ```diff
- +--- com.squareup.sqldelight:android-driver:1.4.0
- |    +--- com.squareup.sqldelight:runtime-jvm:1.4.0
 -|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.72
 -|    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.3.72 (*)
 +|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.72 -> 1.4.0
 +|    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.4.0 (*)
 -|    |    \--- org.jetbrains.kotlin:kotlin-stdlib-common:1.3.72
 +|    |    \--- org.jetbrains.kotlin:kotlin-stdlib-common:1.3.72 -> 1.4.0
--|    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.72 (*)
-+|    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.72 -> 1.4.0 (*)
- \--- com.squareup.sqldelight:rxjava2-extensions:1.4.0
--     \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.72 (*)
-+     \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.72 -> 1.4.0 (*)
 ```
+
+### 3. 요약
+추가/삭제/변경된 의존성을 카테고리별로 정리합니다.
 
 **결과 해석:**
 - `+` : 추가된 의존성 또는 버전
 - `-` : 제거된 의존성 또는 버전  
-- ` ` (공백) : 변경되지 않았지만 변경된 의존성의 경로를 보여주기 위해 표시
 - `->` : 버전 변경 (예: `1.3.72 -> 1.4.0`)
-
-변경되지 않은 의존성도 **변경된 항목의 부모 경로인 경우에만** 표시되어, 어떤 루트 의존성으로부터 변경이 발생했는지 명확하게 파악할 수 있습니다.
 
 ## 사용 방법
 
@@ -38,11 +37,18 @@ Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과
 
 ```bash
 # 변경 전
-./gradlew app:dependencies --configuration releaseRuntimeClasspath > before.txt
+./gradlew app:dependencies --configuration releaseRuntimeClassPath > before.txt
 
 # 의존성 변경 후
-./gradlew app:dependencies --configuration releaseRuntimeClasspath > after.txt
+./gradlew app:dependencies --configuration releaseRuntimeClassPath > after.txt
 ```
+
+#### Configuration 종류
+- **RuntimeClassPath**: 실제 앱 실행 시 필요한 의존성 (APK에 포함되는 라이브러리들) - **권장**
+- **CompileClassPath**: 컴파일 시에만 필요한 의존성 (API, annotation processor 등)
+
+💡 APK 크기나 실제 앱 의존성 확인 시 `RuntimeClassPath` 권장  
+⚠️ 멀티 모듈 프로젝트에서는 CompileClassPath로 출력 시 모든 의존성이 나오지 않을 수 있습니다
 
 ### 2. 비교하기
 
@@ -52,5 +58,3 @@ Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과
 4. "비교하기" 버튼 클릭
 
 ---
-
-> 이 도구는 [JakeWharton/dependency-tree-diff](https://github.com/JakeWharton/dependency-tree-diff)의 알고리즘을 개선하여 웹으로 포팅한 것입니다.

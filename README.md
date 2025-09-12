@@ -51,7 +51,7 @@ Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과
 
 ### 2. 비교하기
 
-1. [Android Dependency Diff Viewer](https://donglab-devtools.github.io/Android-Dependecy-Tree-Diff-Viewer/) 사이트 접속
+1. [Android Dependency Diff Viewer](https://donglab-devtools.github.io/Android-Dependency-Tree-Diff-Viewer/) 사이트 접속
 2. "기존 의존성 파일"에 `before.txt` 업로드
 3. "변경된 의존성 파일"에 `after.txt` 업로드  
 4. "비교하기" 버튼 클릭

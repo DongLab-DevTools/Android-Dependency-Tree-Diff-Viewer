@@ -20,18 +20,26 @@ Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과
 ### 1. 전체 출력
 일반적인 파일 diff처럼 모든 내용을 보여줍니다.
 
-<img width="500" alt="image" src="https://github.com/user-attachments/assets/f8c7acfb-7e17-4b8e-9df8-3b8665835168" />
+<div align="center">
+  <img width="500" alt="image" src="https://github.com/user-attachments/assets/f8c7acfb-7e17-4b8e-9df8-3b8665835168" />
+</div>
 
 ### 2. 변경된 부분만 출력
 추가되거나 삭제된 의존성만 표시합니다.
 
-<img width="500" alt="image" src="https://github.com/user-attachments/assets/a46146d7-024d-4dfd-b6b4-a08444d4f1f0" />
+<div align="center">
+  <img width="500" alt="image" src="https://github.com/user-attachments/assets/a46146d7-024d-4dfd-b6b4-a08444d4f1f0" />
+</div>
 
 ### 3. 요약
 추가/삭제/변경된 의존성을 카테고리별로 요약하여 표시합니다.
 
-<img width="500" alt="image" src="https://github.com/user-attachments/assets/45cf48d6-ed8a-4017-a67d-741507dd3aa8" />
+<div align="center">
+  <img width="500" alt="image" src="https://github.com/user-attachments/assets/45cf48d6-ed8a-4017-a67d-741507dd3aa8" />
+</div>
 
+<br>
+<br>
 
 ## 사용 방법
 
@@ -51,11 +59,12 @@ Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과
 
 💡 APK 크기나 실제 앱 의존성 확인 시 `RuntimeClassPath` 권장
 
+<br>
+<br>
+
 ### 2. 비교하기
 
 1. [Android Dependency Diff Viewer](https://donglab-devtools.github.io/Android-Dependency-Tree-Diff-Viewer/) 사이트 접속
 2. "기존 의존성 파일"에 `before.txt` 업로드
 3. "변경된 의존성 파일"에 `after.txt` 업로드  
 4. "비교하기" 버튼 클릭
-
----

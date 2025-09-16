@@ -4,6 +4,9 @@ Android 프로젝트의 의존성 그래프 변경사항을 쉽게 비교할 수
 
 Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과 그 경로를 시각적으로 표시합니다.
 
+<img width="1000" alt="image" src="https://github.com/user-attachments/assets/ef010cbc-aad7-4f3e-85d3-3c9f1a31088d" />
+
+
 ## 출력 방식
 
 3가지 출력 방식을 제공합니다:
@@ -11,25 +14,18 @@ Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과
 ### 1. 전체 출력
 일반적인 파일 diff처럼 모든 내용을 보여줍니다.
 
+<img width="500" alt="image" src="https://github.com/user-attachments/assets/f8c7acfb-7e17-4b8e-9df8-3b8665835168" />
+
 ### 2. 변경된 부분만 출력
 추가되거나 삭제된 의존성만 표시합니다.
 
-```diff
--|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.72
--|    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.3.72 (*)
-+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.72 -> 1.4.0
-+|    |    |    \--- org.jetbrains.kotlin:kotlin-stdlib:1.4.0 (*)
--|    |    \--- org.jetbrains.kotlin:kotlin-stdlib-common:1.3.72
-+|    |    \--- org.jetbrains.kotlin:kotlin-stdlib-common:1.3.72 -> 1.4.0
-```
+<img width="500" alt="image" src="https://github.com/user-attachments/assets/a46146d7-024d-4dfd-b6b4-a08444d4f1f0" />
 
 ### 3. 요약
-추가/삭제/변경된 의존성을 카테고리별로 정리합니다.
+추가/삭제/변경된 의존성을 카테고리별로 요약하여 표시합니다.
 
-**결과 해석:**
-- `+` : 추가된 의존성 또는 버전
-- `-` : 제거된 의존성 또는 버전  
-- `->` : 버전 변경 (예: `1.3.72 -> 1.4.0`)
+<img width="500" alt="image" src="https://github.com/user-attachments/assets/ea6f4f9e-f282-4cb6-8bdc-2062d6e36808" />
+
 
 ## 사용 방법
 

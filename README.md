@@ -4,8 +4,14 @@ Android 프로젝트의 의존성 그래프 변경사항을 쉽게 비교할 수
 
 Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과 그 경로를 시각적으로 표시합니다.
 
-<img width="1000" alt="image" src="https://github.com/user-attachments/assets/ef010cbc-aad7-4f3e-85d3-3c9f1a31088d" />
+<br>
 
+<div align="center">
+  <img width="700" alt="image" src="https://github.com/user-attachments/assets/ef010cbc-aad7-4f3e-85d3-3c9f1a31088d" />  
+</div>
+
+<br>
+<br>
 
 ## 출력 방식
 
@@ -24,7 +30,7 @@ Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과
 ### 3. 요약
 추가/삭제/변경된 의존성을 카테고리별로 요약하여 표시합니다.
 
-<img width="500" alt="image" src="https://github.com/user-attachments/assets/ea6f4f9e-f282-4cb6-8bdc-2062d6e36808" />
+<img width="500" alt="image" src="https://github.com/user-attachments/assets/45cf48d6-ed8a-4017-a67d-741507dd3aa8" />
 
 
 ## 사용 방법

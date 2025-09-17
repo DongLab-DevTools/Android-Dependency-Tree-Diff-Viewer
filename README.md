@@ -64,7 +64,7 @@ Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과
 - **RuntimeClassPath**: 실제 앱 실행 시 필요한 의존성 (APK에 포함되는 라이브러리들) - **권장**
 - **CompileClassPath**: 컴파일 시에만 필요한 의존성 (API, annotation processor 등)
 
-💡 APK 크기나 실제 앱 의존성 확인 시 `RuntimeClassPath` 권장
+💡 실제 앱 의존성 확인 시 `RuntimeClassPath` 권장
 
 <br>
 <br>

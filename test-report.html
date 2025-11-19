@@ -1,0 +1,420 @@
+<html><head><meta charset="utf-8"/><title>Dependency Tree Diff - Test Report</title><style type="text/css">:root {
+  --text-primary: #111;
+  --text-secondary: #4f4f4f;
+  --success: #006633;
+  --success-bright: #80ffbf;
+  --danger: #cc071e;
+  --danger-bright: #fbdfe0;
+  --warning: #995c00;
+  --warning-bright: #ffeea8;
+  --panel: #eee;
+  --border: #949494;
+  --disabled: #6b6b6b;
+}
+
+html,
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  color: var(--text-primary);
+}
+body {
+  padding: 2rem 1rem;
+}
+.jesthtml-content {
+  margin: 0 auto;
+  max-width: 70rem;
+}
+header {
+  display: flex;
+  align-items: center;
+}
+#title {
+  margin: 0;
+  flex-grow: 1;
+}
+#logo {
+  height: 4rem;
+}
+#timestamp {
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+#metadata-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.additional-information-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+}
+
+/** SUMMARY */
+#summary {
+  color: var(--text-primary);
+  display: flex;
+  font-family: monospace;
+  font-size: 1rem;
+}
+#summary > div {
+  margin-right: 0.5rem;
+  background: var(--panel);
+  padding: 1rem;
+  min-width: 15rem;
+}
+#summary > div:last-child {
+  margin-right: 0;
+}
+@media only screen and (max-width: 720px) {
+  #summary {
+    flex-direction: column;
+  }
+  #summary > div {
+    margin-right: 0;
+    margin-top: 1rem;
+  }
+  #summary > div:first-child {
+    margin-top: 0;
+  }
+}
+
+.summary-total {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.summary-passed {
+  color: var(--success);
+  border-left: 0.4rem solid var(--success);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-failed,
+.summary-obsolete-snapshots {
+  color: var(--danger);
+  border-left: 0.4rem solid var(--danger);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-pending {
+  color: var(--warning);
+  border-left: 0.4rem solid var(--warning);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-empty {
+  color: var(--disabled);
+  border-left: 0.4rem solid var(--disabled);
+  margin-bottom: 0.15rem;
+}
+
+.test-result {
+  padding: 1rem;
+  margin-bottom: 0.25rem;
+}
+.test-result:last-child {
+  border: 0;
+}
+.test-result.passed {
+  background-color: var(--success-bright);
+  color: var(--success);
+}
+.test-result.failed {
+  background-color: var(--danger-bright);
+  color: var(--danger);
+}
+.test-result.pending {
+  background-color: var(--warning-bright);
+  color: var(--warning);
+}
+
+.test-info {
+  display: flex;
+  justify-content: space-between;
+}
+.test-suitename {
+  width: 20%;
+  text-align: left;
+  font-weight: bold;
+  word-break: break-word;
+}
+.test-title {
+  width: 40%;
+  text-align: left;
+  font-style: italic;
+}
+.test-status {
+  width: 20%;
+  text-align: right;
+}
+.test-duration {
+  width: 10%;
+  text-align: right;
+  font-size: 0.85rem;
+}
+
+.failureMessages {
+  padding: 0 1rem;
+  margin-top: 1rem;
+  border-top: 1px dashed var(--danger);
+}
+.failureMessages.suiteFailure {
+  border-top: none;
+}
+.failureMsg {
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+
+.suite-container {
+  margin-bottom: 1rem;
+}
+.suite-info {
+  padding: 1rem;
+  background-color: var(--panel);
+  color: var(--text-secondary);
+  border: 0.15rem solid;
+  border-color: var(--panel);
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+.suite-info:hover {
+  border-color: var(--border);
+  cursor: pointer;
+}
+.suite-info .suite-path {
+  word-break: break-all;
+  flex-grow: 1;
+  font-family: monospace;
+  font-size: 1rem;
+}
+.suite-info .suite-time {
+  margin-left: 1rem;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.85rem;
+}
+.suite-info .suite-time.warn {
+  background-color: var(--danger);
+  color: #fff;
+}
+.suite-info:before {
+  content: "\2303";
+  display: inline-block;
+  margin-right: 1rem;
+  transform: rotate(180deg) translateY(0.15rem);
+}
+.suite-container[open] .suite-info:before {
+  transform: rotate(0deg) translateY(0.15rem);
+}
+
+/* CONSOLE LOGS */
+.suite-consolelog {
+  margin-bottom: 0.25rem;
+  padding: 1rem;
+  background-color: var(--panel);
+}
+.suite-consolelog-header {
+  font-weight: bold;
+}
+.suite-consolelog-item {
+  padding: 0.5rem;
+}
+.suite-consolelog-item pre {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+.suite-consolelog-item-origin {
+  color: var(--text-secondary);
+  font-weight: bold;
+}
+.suite-consolelog-item-message {
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0 0.5rem;
+}
+
+/* OBSOLETE SNAPSHOTS */
+.suite-obsolete-snapshots {
+  margin-bottom: 0.25rem;
+  padding: 1rem;
+  background-color: var(--danger-bright);
+  color: var(--danger);
+}
+.suite-obsolete-snapshots-header {
+  font-weight: bold;
+}
+.suite-obsolete-snapshots-item {
+  padding: 0.5rem;
+}
+.suite-obsolete-snapshots-item pre {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+.suite-obsolete-snapshots-item-message {
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0 0.5rem;
+}
+</style></head><body><main class="jesthtml-content"><header><h1 id="title">Dependency Tree Diff - Test Report</h1></header><section id="metadata-container"><div id="timestamp">Started: 2025-11-19 12:17:25</div><div id="summary"><div id="suite-summary"><div class="summary-total">Suites (3)</div><div class="summary-passed ">3 passed</div><div class="summary-failed  summary-empty">0 failed</div><div class="summary-pending  summary-empty">0 pending</div></div><div id="test-summary"><div class="summary-total">Tests (102)</div><div class="summary-passed ">102 passed</div><div class="summary-failed  summary-empty">0 failed</div><div class="summary-pending  summary-empty">0 pending</div></div></div></section><details id="suite-1" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-flattened.test.js</div><div class="suite-time">0.111s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; version change</div><div class="test-title">요약이 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; version change</div><div class="test-title">통계가 올바르게 추출되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; version change</div><div class="test-title">Added/Removed/Changed 섹션이 올바른 형식이어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; library addition</div><div class="test-title">요약이 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; library addition</div><div class="test-title">통계가 올바르게 추출되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; library addition</div><div class="test-title">Added/Removed/Changed 섹션이 올바른 형식이어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; library removal</div><div class="test-title">요약이 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; library removal</div><div class="test-title">통계가 올바르게 추출되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; library removal</div><div class="test-title">Added/Removed/Changed 섹션이 올바른 형식이어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; project module addition</div><div class="test-title">요약이 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; project module addition</div><div class="test-title">통계가 올바르게 추출되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; project module addition</div><div class="test-title">Added/Removed/Changed 섹션이 올바른 형식이어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; tree depth change</div><div class="test-title">요약이 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; tree depth change</div><div class="test-title">통계가 올바르게 추출되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; tree depth change</div><div class="test-title">Added/Removed/Changed 섹션이 올바른 형식이어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; flattened noise</div><div class="test-title">요약이 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; flattened noise</div><div class="test-title">통계가 올바르게 추출되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; flattened noise</div><div class="test-title">Added/Removed/Changed 섹션이 올바른 형식이어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; multiple changes</div><div class="test-title">요약이 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; multiple changes</div><div class="test-title">통계가 올바르게 추출되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; multiple changes</div><div class="test-title">Added/Removed/Changed 섹션이 올바른 형식이어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; project removal</div><div class="test-title">요약이 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; project removal</div><div class="test-title">통계가 올바르게 추출되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 모든 테스트 케이스 검증 &gt; project removal</div><div class="test-title">Added/Removed/Changed 섹션이 올바른 형식이어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 필터링 로직 검증</div><div class="test-title">중복 제거가 정상 작동해야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 필터링 로직 검증</div><div class="test-title">project 모듈이 올바르게 감지되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 엣지 케이스</div><div class="test-title">동일한 입력은 변경사항 없음을 반환해야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 엣지 케이스</div><div class="test-title">빈 입력도 정상 처리되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 케이스별 특성 검증</div><div class="test-title">버전 변경 케이스 - Changed 항목이 있어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 케이스별 특성 검증</div><div class="test-title">라이브러리 추가 케이스 - Added 항목이 있어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">요약 (Flattened Diff) &gt; 케이스별 특성 검증</div><div class="test-title">라이브러리 제거 케이스 - Removed 항목이 있어야 함</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div></div></details><details id="suite-2" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-only.test.js</div><div class="suite-time">0.049s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; version change</div><div class="test-title">결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; version change</div><div class="test-title">공백으로 시작하는 라인이 없어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; version change</div><div class="test-title">+/- 라인만 포함되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; version change</div><div class="test-title">전체 diff보다 라인 수가 적거나 같아야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; library addition</div><div class="test-title">결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; library addition</div><div class="test-title">공백으로 시작하는 라인이 없어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; library addition</div><div class="test-title">+/- 라인만 포함되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; library addition</div><div class="test-title">전체 diff보다 라인 수가 적거나 같아야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; library removal</div><div class="test-title">결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; library removal</div><div class="test-title">공백으로 시작하는 라인이 없어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; library removal</div><div class="test-title">+/- 라인만 포함되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; library removal</div><div class="test-title">전체 diff보다 라인 수가 적거나 같아야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; project module addition</div><div class="test-title">결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; project module addition</div><div class="test-title">공백으로 시작하는 라인이 없어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; project module addition</div><div class="test-title">+/- 라인만 포함되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; project module addition</div><div class="test-title">전체 diff보다 라인 수가 적거나 같아야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; tree depth change</div><div class="test-title">결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; tree depth change</div><div class="test-title">공백으로 시작하는 라인이 없어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; tree depth change</div><div class="test-title">+/- 라인만 포함되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; tree depth change</div><div class="test-title">전체 diff보다 라인 수가 적거나 같아야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; flattened noise</div><div class="test-title">결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; flattened noise</div><div class="test-title">공백으로 시작하는 라인이 없어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; flattened noise</div><div class="test-title">+/- 라인만 포함되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; flattened noise</div><div class="test-title">전체 diff보다 라인 수가 적거나 같아야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; multiple changes</div><div class="test-title">결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; multiple changes</div><div class="test-title">공백으로 시작하는 라인이 없어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; multiple changes</div><div class="test-title">+/- 라인만 포함되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; multiple changes</div><div class="test-title">전체 diff보다 라인 수가 적거나 같아야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; project removal</div><div class="test-title">결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; project removal</div><div class="test-title">공백으로 시작하는 라인이 없어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; project removal</div><div class="test-title">+/- 라인만 포함되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 모든 테스트 케이스 검증 &gt; project removal</div><div class="test-title">전체 diff보다 라인 수가 적거나 같아야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 필터링 로직 검증</div><div class="test-title">동일한 입력은 빈 결과를 반환해야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 필터링 로직 검증</div><div class="test-title">간단한 변경사항이 올바르게 필터링되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 필터링 로직 검증</div><div class="test-title">변경사항이 없으면 공백 라인이 제거되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 엣지 케이스</div><div class="test-title">빈 입력은 빈 결과를 반환해야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 엣지 케이스</div><div class="test-title">완전히 다른 입력은 삭제와 추가로만 표시되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 케이스별 특성 검증</div><div class="test-title">버전 변경 케이스 - +/- 라인만 있어야 함</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 케이스별 특성 검증</div><div class="test-title">라이브러리 추가 케이스 - + 라인이 있어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">변경사항만 보기 (Only Diff) &gt; 케이스별 특성 검증</div><div class="test-title">라이브러리 제거 케이스 - - 라인이 있어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div></div></details><details id="suite-3" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js</div><div class="suite-time">0.052s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; version change</div><div class="test-title">파일이 정상적으로 로드되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; version change</div><div class="test-title">diff 결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; version change</div><div class="test-title">diff 결과에 +, -, 또는 공백 라인이 있어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; library addition</div><div class="test-title">파일이 정상적으로 로드되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; library addition</div><div class="test-title">diff 결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; library addition</div><div class="test-title">diff 결과에 +, -, 또는 공백 라인이 있어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; library removal</div><div class="test-title">파일이 정상적으로 로드되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; library removal</div><div class="test-title">diff 결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; library removal</div><div class="test-title">diff 결과에 +, -, 또는 공백 라인이 있어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; project module addition</div><div class="test-title">파일이 정상적으로 로드되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; project module addition</div><div class="test-title">diff 결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; project module addition</div><div class="test-title">diff 결과에 +, -, 또는 공백 라인이 있어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; tree depth change</div><div class="test-title">파일이 정상적으로 로드되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; tree depth change</div><div class="test-title">diff 결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; tree depth change</div><div class="test-title">diff 결과에 +, -, 또는 공백 라인이 있어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; flattened noise</div><div class="test-title">파일이 정상적으로 로드되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; flattened noise</div><div class="test-title">diff 결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; flattened noise</div><div class="test-title">diff 결과에 +, -, 또는 공백 라인이 있어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; multiple changes</div><div class="test-title">파일이 정상적으로 로드되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; multiple changes</div><div class="test-title">diff 결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; multiple changes</div><div class="test-title">diff 결과에 +, -, 또는 공백 라인이 있어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; project removal</div><div class="test-title">파일이 정상적으로 로드되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; project removal</div><div class="test-title">diff 결과가 생성되어야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 모든 테스트 케이스 검증 &gt; project removal</div><div class="test-title">diff 결과에 +, -, 또는 공백 라인이 있어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 파싱 로직 검증</div><div class="test-title">동일한 입력은 모두 변경 없음으로 표시되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 파싱 로직 검증</div><div class="test-title">depth가 정확히 계산되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 파싱 로직 검증</div><div class="test-title">버전 변경이 정확히 감지되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 엣지 케이스</div><div class="test-title">빈 입력은 빈 결과를 반환해야 함</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 엣지 케이스</div><div class="test-title">완전히 다른 입력은 삭제와 추가로 표시되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 엣지 케이스</div><div class="test-title">대용량 파일도 정상 처리되어야 함</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">전체 트리 비교 (Full Tree Diff) &gt; 테스트 케이스 요약</div><div class="test-title">총 8개의 테스트 케이스가 로드됨</div><div class="test-status">passed</div><div class="test-duration">0.006s</div></div></div></div><div class="suite-consolelog"><div class="suite-consolelog-header">Console Log</div><div class="suite-consolelog-item"><pre class="suite-consolelog-item-origin">    at Object.log (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:135:15)
+    at Promise.finally.completed (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at _runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:275:16)
+    at runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:343:7)</pre><pre class="suite-consolelog-item-message">
+📦 로드된 테스트 케이스:</pre></div><div class="suite-consolelog-item"><pre class="suite-consolelog-item-origin">    at log (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:137:17)
+    at Array.forEach (&lt;anonymous&gt;)
+    at Object.forEach (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:136:17)
+    at Promise.finally.completed (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at _runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:275:16)
+    at runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:343:7)</pre><pre class="suite-consolelog-item-message">  1. version change</pre></div><div class="suite-consolelog-item"><pre class="suite-consolelog-item-origin">    at log (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:137:17)
+    at Array.forEach (&lt;anonymous&gt;)
+    at Object.forEach (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:136:17)
+    at Promise.finally.completed (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at _runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:275:16)
+    at runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:343:7)</pre><pre class="suite-consolelog-item-message">  2. library addition</pre></div><div class="suite-consolelog-item"><pre class="suite-consolelog-item-origin">    at log (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:137:17)
+    at Array.forEach (&lt;anonymous&gt;)
+    at Object.forEach (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:136:17)
+    at Promise.finally.completed (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at _runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:275:16)
+    at runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:343:7)</pre><pre class="suite-consolelog-item-message">  3. library removal</pre></div><div class="suite-consolelog-item"><pre class="suite-consolelog-item-origin">    at log (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:137:17)
+    at Array.forEach (&lt;anonymous&gt;)
+    at Object.forEach (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:136:17)
+    at Promise.finally.completed (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at _runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:275:16)
+    at runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:343:7)</pre><pre class="suite-consolelog-item-message">  4. project module addition</pre></div><div class="suite-consolelog-item"><pre class="suite-consolelog-item-origin">    at log (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:137:17)
+    at Array.forEach (&lt;anonymous&gt;)
+    at Object.forEach (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:136:17)
+    at Promise.finally.completed (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at _runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:275:16)
+    at runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:343:7)</pre><pre class="suite-consolelog-item-message">  5. tree depth change</pre></div><div class="suite-consolelog-item"><pre class="suite-consolelog-item-origin">    at log (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:137:17)
+    at Array.forEach (&lt;anonymous&gt;)
+    at Object.forEach (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:136:17)
+    at Promise.finally.completed (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at _runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:275:16)
+    at runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:343:7)</pre><pre class="suite-consolelog-item-message">  6. flattened noise</pre></div><div class="suite-consolelog-item"><pre class="suite-consolelog-item-origin">    at log (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:137:17)
+    at Array.forEach (&lt;anonymous&gt;)
+    at Object.forEach (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:136:17)
+    at Promise.finally.completed (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at _runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:275:16)
+    at runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:343:7)</pre><pre class="suite-consolelog-item-message">  7. multiple changes</pre></div><div class="suite-consolelog-item"><pre class="suite-consolelog-item-origin">    at log (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:137:17)
+    at Array.forEach (&lt;anonymous&gt;)
+    at Object.forEach (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/__tests__/diff-tree-full.test.js:136:17)
+    at Promise.finally.completed (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at _runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at _runTestsForDescribeBlock (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:275:16)
+    at runTest (/Users/dongh/Documents/android-util/Android-Dependecy-Tree-Diff-Viewer/node_modules/jest-runner/build/index.js:343:7)</pre><pre class="suite-consolelog-item-message">  8. project removal</pre></div></div></details></main></body></html>

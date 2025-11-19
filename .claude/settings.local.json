@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node test-diff.js:*)",
+      "Bash(node test-trost.js:*)",
+      "Bash(node test-all.js:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

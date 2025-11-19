@@ -1,0 +1,54 @@
+{
+  "name": "android-dependecy-tree-diff-viewer",
+  "version": "1.0.0",
+  "description": "Android 프로젝트의 의존성 그래프 변경사항을 쉽게 비교할 수 있는 웹 도구입니다.",
+  "main": "debug-core.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:html": "jest --json --outputFile=test-results.json && node generate-test-report.js"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "js/**/*.js",
+      "!js/**/*.test.js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "reporters": [
+      "default",
+      [
+        "jest-html-reporter",
+        {
+          "pageTitle": "Dependency Tree Diff - Test Report",
+          "outputPath": "test-report.html",
+          "includeFailureMsg": true,
+          "includeConsoleLog": true,
+          "theme": "defaultTheme",
+          "logo": "",
+          "dateFormat": "yyyy-mm-dd HH:MM:ss"
+        }
+      ]
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dongx0915/Android-Dependecy-Tree-Diff-Viewer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/dongx0915/Android-Dependecy-Tree-Diff-Viewer/issues"
+  },
+  "homepage": "https://github.com/dongx0915/Android-Dependecy-Tree-Diff-Viewer#readme",
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "jest-html-reporter": "^4.3.0"
+  }
+}

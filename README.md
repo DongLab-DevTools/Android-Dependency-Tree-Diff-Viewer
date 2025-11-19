@@ -1,5 +1,9 @@
 # Android Dependency Tree Diff Viewer
 
+[![Tests](https://github.com/dongx0915/Android-Dependecy-Tree-Diff-Viewer/actions/workflows/test.yml/badge.svg)](https://github.com/dongx0915/Android-Dependecy-Tree-Diff-Viewer/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
+
 Android 프로젝트의 의존성 그래프 변경사항을 쉽게 비교할 수 있는 웹 도구입니다.
 
 Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과 그 경로를 시각적으로 표시합니다.
@@ -75,3 +79,20 @@ Gradle의 `dependencies` 태스크 출력을 비교하여 변경된 의존성과
 2. "기존 의존성 파일"에 `before.txt` 업로드
 3. "변경된 의존성 파일"에 `after.txt` 업로드  
 4. "비교하기" 버튼 클릭
+
+<br>
+<br>
+
+## 🧪 테스트
+
+```bash
+# 의존성 설치
+npm install
+
+# 테스트 실행
+npm test
+```
+
+**테스트 결과 보기:** `test-viewer.html` 파일을 브라우저에서 열기
+
+자세한 내용은 [TEST_README.md](./TEST_README.md) 참고

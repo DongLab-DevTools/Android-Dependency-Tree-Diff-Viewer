@@ -86,7 +86,7 @@ function buildTreeOriginal(paths){
 function pathsMinusOriginal(a, b){
   const key = p => p.join("\u0001");
   const bset = new Set(b.map(key));
-  return a.filter(p => !bset.has(key));
+  return a.filter(p => !bset.has(key(p)));  // ✅ Fixed: key(p) 호출 추가
 }
 
 function treesEqualOriginal(a, b){

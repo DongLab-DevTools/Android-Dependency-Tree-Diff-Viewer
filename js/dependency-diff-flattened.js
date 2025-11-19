@@ -13,10 +13,20 @@ function dependencyTreeDiffFlattened(oldStr, newStr){
   const newMap = buildResolvedMapFlattened(newStr);
   const diff = diffMapsFlattened(oldMap, newMap);
 
-  // 2) 새로운 모듈의 하위 의존성들도 추가하되,
+  // 2) 전체 트리 diff에서 실제 변경된 의존성 추출
+  //    (트리 구조 변경으로 인한 추가/삭제도 감지)
+  if (typeof dependencyTreeDiffEnhanced === 'function') {
+    const fullDiff = dependencyTreeDiffEnhanced(oldStr, newStr);
+    const treeChanges = extractChangesFromFullDiff(fullDiff, oldMap, newMap);
+
+    // 트리 변경사항을 기존 diff에 병합
+    mergeDiffResults(diff, treeChanges);
+  }
+
+  // 3) 새로운 모듈의 하위 의존성들도 추가하되,
   //    "전체 이전 그래프에 없던 좌표"만 추가
   const additionalDepsTree = findModuleDependenciesWithStructure(oldStr, newStr, diff, oldMap);
-  
+
   return formatReportFlattenedWithTree(diff, additionalDepsTree);
 }
 
@@ -37,6 +47,97 @@ function buildResolvedMapFlattened(text){
 }
 
 function splitLinesFlattened(s){ return (s||"").split(/\r\n|\n|\r/); }
+
+// 전체 트리 diff 결과에서 변경사항 추출
+function extractChangesFromFullDiff(fullDiff, oldMap, newMap) {
+  const lines = fullDiff.split(/\r?\n/);
+  const added = new Map(); // key -> version
+  const removed = new Map(); // key -> version
+
+  for (const line of lines) {
+    // 공백으로 시작하는 라인(변경 없음)은 무시
+    if (!line.startsWith('+') && !line.startsWith('-')) continue;
+
+    const isAdded = line.startsWith('+');
+    const parsed = parseLineToCoordinateFlattened(line.substring(1)); // +/- 제거
+    if (!parsed || !parsed.key) continue;
+
+    // project 의존성은 제외 (이미 다른 로직에서 처리)
+    if (parsed.key.startsWith('project :')) continue;
+
+    const { key, resolved } = parsed;
+
+    // ✅ 핵심: 전역적으로 새로 추가되거나 제거된 것만 포함
+    const inOld = Object.prototype.hasOwnProperty.call(oldMap, key);
+    const inNew = Object.prototype.hasOwnProperty.call(newMap, key);
+
+    if (isAdded) {
+      // + 라인 중 전역적으로 새로운 것만 (before 전체에 없던 의존성)
+      if (!removed.has(key) && !inOld) {
+        added.set(key, resolved);
+      }
+    } else {
+      // - 라인 중 전역적으로 제거된 것만 (after 전체에 없는 의존성)
+      if (!added.has(key) && !inNew) {
+        removed.set(key, resolved);
+      }
+    }
+  }
+
+  return { added, removed };
+}
+
+// 트리 변경사항을 기존 diff 결과에 병합
+function mergeDiffResults(diff, treeChanges) {
+  const existingAdded = new Set(diff.added.map(item => item.key));
+  const existingRemoved = new Set(diff.removed.map(item => item.key));
+  const existingChanged = new Set(diff.changed.map(item => item.key));
+
+  // 트리에서 추가된 항목 중 아직 diff에 없는 것만 추가
+  for (const [key, version] of treeChanges.added.entries()) {
+    if (!existingAdded.has(key) && !existingChanged.has(key)) {
+      // 혹시 removed에 있으면 changed로 변경
+      if (existingRemoved.has(key)) {
+        const removedItem = diff.removed.find(item => item.key === key);
+        if (removedItem) {
+          diff.changed.push({
+            key,
+            before: removedItem.version,
+            after: version
+          });
+          diff.removed = diff.removed.filter(item => item.key !== key);
+        }
+      } else {
+        diff.added.push({ key, version });
+      }
+    }
+  }
+
+  // 트리에서 삭제된 항목 중 아직 diff에 없는 것만 추가
+  for (const [key, version] of treeChanges.removed.entries()) {
+    if (!existingRemoved.has(key) && !existingChanged.has(key)) {
+      // 혹시 added에 있으면 changed로 변경
+      if (existingAdded.has(key)) {
+        const addedItem = diff.added.find(item => item.key === key);
+        if (addedItem) {
+          diff.changed.push({
+            key,
+            before: version,
+            after: addedItem.version
+          });
+          diff.added = diff.added.filter(item => item.key !== key);
+        }
+      } else {
+        diff.removed.push({ key, version });
+      }
+    }
+  }
+
+  // 재정렬
+  diff.added.sort((a,b) => a.key.localeCompare(b.key));
+  diff.removed.sort((a,b) => a.key.localeCompare(b.key));
+  diff.changed.sort((a,b) => a.key.localeCompare(b.key));
+}
 
 function parseLineToCoordinateFlattened(line){
   if (!line) return null;
@@ -156,8 +257,13 @@ function findModuleDependenciesWithStructure(oldStr, newStr, diff, oldMap) {
       const line = newLines[i];
       if (line.includes("--- " + moduleName)) {
         moduleLineIndex = i;
-        const idx = line.indexOf("--- ");
-        moduleDepth = Math.floor(idx / 5);
+        // 정확한 depth 계산: +--- 또는 \--- 앞의 들여쓰기 부분 측정
+        const match = line.match(/^([| ]*)[+\\]--- /);
+        if (match) {
+          moduleDepth = match[1].length / 5;
+        } else {
+          moduleDepth = 0;
+        }
         break;
       }
     }
@@ -167,10 +273,12 @@ function findModuleDependenciesWithStructure(oldStr, newStr, diff, oldMap) {
 
     for (let i = moduleLineIndex + 1; i < newLines.length; i++) {
       const line = newLines[i];
-      const idx = line.indexOf("--- ");
-      if (idx < 0) continue;
 
-      const currentDepth = Math.floor(idx / 5);
+      // 정확한 depth 계산
+      const match = line.match(/^([| ]*)[+\\]--- /);
+      if (!match) continue;
+
+      const currentDepth = match[1].length / 5;
       if (currentDepth <= moduleDepth) break;
 
       const parsed = parseLineToCoordinateFlattened(line);

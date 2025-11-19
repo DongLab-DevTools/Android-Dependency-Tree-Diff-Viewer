@@ -43,14 +43,25 @@ function parseDependencyLinesEnhanced(text) {
 
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i];
-    const idx = raw.indexOf("--- ");
-    if (idx < 0) continue;
 
-    const prefix = raw.substring(0, idx + 4); // "│   +--- "
-    const content = raw.substring(idx + 4);
-    const depth = Math.floor(idx / 5);
+    // +--- 또는 \--- 패턴 찾기 (정확한 depth 계산을 위해)
+    const match = raw.match(/^([| ]*)[+\\]--- (.+)$/);
+    if (!match) continue;
+
+    const indentPart = match[1];  // "+--- " 앞의 들여쓰기 부분
+    const content = match[2];      // 의존성 정보
+
+    // depth 계산: 들여쓰기는 5칸 단위 ("|    " 또는 "     ")
+    const depth = indentPart.length / 5;
+
+    // 정수가 아니면 잘못된 형식이므로 건너뜀
+    if (depth !== Math.floor(depth)) continue;
 
     const { id, ver, isProject } = extractIdAndVersionEnhanced(content);
+
+    // prefix 재구성: 들여쓰기 + "+--- " 또는 "\--- "
+    const connector = raw.includes('+---') ? '+--- ' : '\\--- ';
+    const prefix = indentPart + connector;
 
     nodes.push({
       line: raw,        // 원문 전체 (접두부 포함)
